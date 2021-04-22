@@ -1,0 +1,40 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
+VAGRANTFILE_API_VERSION = "2"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  config.vm.box = "ubuntu/bionic64"
+  config.vm.hostname = "docker1"
+  #config.vm.box_url = "http://cloud-images.ubuntu.com/vagrant/trusty/current/trusty-server-cloudimg-amd64-vagrant-disk1.box"
+
+  config.vm.network "private_network", ip: "192.168.49.20" # allows the VM to be accessible at this IP
+  config.ssh.forward_agent = true
+
+  # NB: customize this for your hardware!!
+  config.vm.provider "virtualbox" do |vb|
+    vb.customize ["modifyvm", :id, "--cpus", "1"] # give the VM all 4 cores
+    vb.customize ["modifyvm", :id, "--ioapic", "on"]  # see http://stackoverflow.com/a/17126363/9621
+    vb.customize ["modifyvm", :id, "--memory", "4096"] # give the VM 4 GB of RAM
+
+    # workaround for 5 sec DNS timeout in guest; see http://serverfault.com/q/495914/21286
+    vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+    vb.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
+  end
+  
+  config.vm.synced_folder ".", "/vagrant"
+  
+  # install docker on the VM
+  config.vm.provision :docker
+  #config.vm.provision :docker-compose
+  config.vm.provision :shell, :inline => <<-EOT
+    # allows caching apt-get downloads in compatible Dockerfiles;
+    # see https://gist.github.com/dergachev/8441335
+    apt-get install -y squid-deb-proxy
+    # install other useful tools on the VM
+    apt-get install -y curl git vim
+    apt-get install -y pwgen unzip rsync wget ack-grep
+    # TODO: provision your dotfiles here
+  EOT
+end
