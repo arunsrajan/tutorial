@@ -1,0 +1,63 @@
+version: '3.8'
+services:
+  namenode:
+    image: sequenceiq/hadoop-docker:3.3.0
+    hostname: namenode
+    container_name: namenode
+    environment:
+      - HADOOP_NAMENODE_HEAPSIZE=1024
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:8020
+      - HDFS_CONF_dfs_replication=3
+    ports:
+      - "8020:8020"
+    command: namenode
+
+  resourcemanager:
+    image: sequenceiq/hadoop-docker:3.3.0
+    hostname: resourcemanager
+    container_name: resourcemanager
+    environment:
+      - YARN_RESOURCEMANAGER_HEAPSIZE=1024
+      - YARN_CONF_yarn_resourcemanager_hostname=resourcemanager
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:8020
+    command: resourcemanager
+
+  nodemanager:
+    image: sequenceiq/hadoop-docker:3.3.0
+    hostname: nodemanager
+    container_name: nodemanager
+    environment:
+      - YARN_NODEMANAGER_HEAPSIZE=1024
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:8020
+    command: nodemanager
+
+  datanode1:
+    image: sequenceiq/hadoop-docker:3.3.0
+    hostname: datanode1
+    container_name: datanode1
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:8020
+      - HDFS_CONF_dfs_replication=3
+    command: datanode
+
+  datanode2:
+    image: sequenceiq/hadoop-docker:3.3.0
+    hostname: datanode2
+    container_name: datanode2
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:8020
+      - HDFS_CONF_dfs_replication=3
+    command: datanode
+
+  datanode3:
+    image: sequenceiq/hadoop-docker:3.3.0
+    hostname: datanode3
+    container_name: datanode3
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:8020
+      - HDFS_CONF_dfs_replication=3
+    command: datanode
+
+networks:
+  default:
+    driver: bridge

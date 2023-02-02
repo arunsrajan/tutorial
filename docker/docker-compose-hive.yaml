@@ -1,0 +1,29 @@
+version: '3'
+services:
+  hive:
+    image: apache/hive:3.2.0
+    ports:
+      - "10000:10000"
+    volumes:
+      - ./hive:/opt/hive/conf
+      - ./data:/tmp/data
+    environment:
+      HIVE_METASTORE_DB_TYPE: mysql
+      HIVE_METASTORE_DB_HOST: mysql
+      HIVE_METASTORE_DB_PORT: 3306
+      HIVE_METASTORE_DB_NAME: hive
+      HIVE_METASTORE_DB_USER: hive
+      HIVE_METASTORE_DB_PASSWORD: hive
+    depends_on:
+      - mysql
+  mysql:
+    image: mysql:5.7
+    environment:
+      MYSQL_DATABASE: hive
+      MYSQL_USER: hive
+      MYSQL_PASSWORD: hive
+      MYSQL_ROOT_PASSWORD: hive
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql:/var/lib/mysql

@@ -1,0 +1,39 @@
+version: '3'
+services:
+  zookeeper:
+    image: zookeeper:latest
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_SERVERS: server.1=zookeeper:2888:3888
+    networks:
+      hadoop:
+        aliases:
+          - zookeeper1
+
+  resourcemanager:
+    image: hadoop:latest
+    environment:
+      HADOOP_CONF_DIR: /hadoop/etc/hadoop
+      HADOOP_YARN_HOME: /hadoop
+      HADOOP_YARN_RESOURCEMANAGER_HOSTNAME: resourcemanager
+      HADOOP_YARN_ZK_QUORUM: zookeeper:2181
+    networks:
+      hadoop:
+        aliases:
+          - resourcemanager
+
+  nodemanager:
+    image: hadoop:latest
+    environment:
+      HADOOP_CONF_DIR: /hadoop/etc/hadoop
+      HADOOP_YARN_HOME: /hadoop
+      HADOOP_YARN_NODEMANAGER_HOSTNAME: nodemanager
+      HADOOP_YARN_RESOURCEMANAGER_HOSTNAME: resourcemanager
+    networks:
+      hadoop:
+        aliases:
+          - nodemanager
+
+networks:
+  hadoop:
+    driver: bridge

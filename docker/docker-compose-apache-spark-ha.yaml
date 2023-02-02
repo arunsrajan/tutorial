@@ -1,0 +1,49 @@
+version: "3"
+services:
+  zookeeper:
+    image: "zookeeper:3.6.2"
+    hostname: zookeeper
+    ports:
+      - "2181:2181"
+
+  spark-master1:
+    image: "spark:2.4.7"
+    hostname: spark-master1
+    command: bin/spark-class org.apache.spark.deploy.master.Master -h spark-master1 -p 7077 --webui-port 8080
+    environment:
+      SPARK_NO_DAEMONIZE: "true"
+    ports:
+      - "7077:7077"
+      - "8080:8080"
+    depends_on:
+      - zookeeper
+
+  spark-master2:
+    image: "spark:2.4.7"
+    hostname: spark-master2
+    command: bin/spark-class org.apache.spark.deploy.master.Master -h spark-master2 -p 7077 --webui-port 8080
+    environment:
+      SPARK_NO_DAEMONIZE: "true"
+    ports:
+      - "7078:7077"
+      - "8081:8080"
+    depends_on:
+      - zookeeper
+
+  spark-worker1:
+    image: "spark:2.4.7"
+    hostname: spark-worker1
+    command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master1:7077
+    environment:
+      SPARK_NO_DAEMONIZE: "true"
+    depends_on:
+      - spark-master1
+
+  spark-worker2:
+    image: "spark:2.4.7"
+    hostname: spark-worker2
+    command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master2:7077
+    environment:
+      SPARK_NO_DAEMONIZE: "true"
+    depends_on:
+      - spark-master2

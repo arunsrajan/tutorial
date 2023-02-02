@@ -1,0 +1,21 @@
+version: "3.7"
+services:
+  tomcat1:
+    image: tomcat:9.0.31-jdk8-openjdk
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./tomcat1/conf:/usr/local/tomcat/conf
+      - ./tomcat1/webapps:/usr/local/tomcat/webapps
+    environment:
+      CATALINA_OPTS: "-Dcatalina.base=/usr/local/tomcat -Dcatalina.home=/usr/local/tomcat -Djava.io.tmpdir=/usr/local/tomcat/temp -Dcluster.node.type=node1 -Dcluster.node.host=tomcat1 -Dcluster.manager.url=multicast://239.0.0.1:6666 -Dcluster.listener.host=tomcat1 -Dcluster.listener.port=6666"
+
+  tomcat2:
+    image: tomcat:9.0.31-jdk8-openjdk
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./tomcat2/conf:/usr/local/tomcat/conf
+      - ./tomcat2/webapps:/usr/local/tomcat/webapps
+    environment:
+      CATALINA_OPTS: "-Dcatalina.base=/usr/local/tomcat -Dcatalina.home=/usr/local/tomcat -Djava.io.tmpdir=/usr/local/tomcat/temp -Dcluster.node.type=node2 -Dcluster.node.host=tomcat2 -Dcluster.manager.url=multicast://239.0.0.1:6666 -Dcluster.listener.host=tomcat2 -Dcluster.listener.port=6666"

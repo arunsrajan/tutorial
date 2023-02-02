@@ -1,0 +1,52 @@
+version: '3'
+
+networks:
+  tomcatredis:
+    name: tomcatredis
+    driver: bridge
+services:
+  redis-session-store:
+    hostname: redis-session-store
+    image: redis:5.0.7-alpine
+    command: redis-server --appendonly yes
+    ports:
+      - 6379:6379
+    network_mode:
+      bridge
+    networks:
+      - tomcatredis
+  tomcat-node1:
+    image: tomcat:10.0
+    ports:
+      - 8080:8080
+    volumes:
+      - C:/DEVELOPMENT/tomcat/tomcat1/webapps/test/testget.jsp:/usr/local/tomcat/webapps/test/testget.jsp
+      - C:/DEVELOPMENT/tomcat/tomcat1/webapps/test/testset.jsp:/usr/local/tomcat/webapps/test/testset.jsp
+      - C:/DEVELOPMENT/tomcat/tomcat1/conf/context.xml:/usr/local/tomcat/conf/context.xml
+      - C:/DEVELOPMENT/tomcat/tomcat1/conf/redisson.conf:/usr/local/tomcat/conf/redisson.conf
+      - C:/DEVELOPMENT/tomcat/tomcat1/lib/redisson-all-3.16.1.jar:/usr/local/tomcat/lib/redisson-all-3.16.1.jar
+      - C:/DEVELOPMENT/tomcat/tomcat1/lib/redisson-tomcat-10-3.16.1.jar:/usr/local/tomcat/lib/redisson-tomcat-10-3.16.1.jar
+    environment:
+      CATALINA_OPTS: "-Dcatalina.session.manager=redis -Dcatalina.session.store_directory=redis://redis-session-store:6379/0"
+    network_mode:
+      bridge
+    networks:
+      - tomcatredis
+  tomcat-node2:
+    image: tomcat:10.0
+    ports:
+      - 8081:8080
+    volumes:
+      - C:/DEVELOPMENT/tomcat/tomcat2/webapps/test/testget.jsp:/usr/local/tomcat/webapps/test/testget.jsp
+      - C:/DEVELOPMENT/tomcat/tomcat2/webapps/test/testset.jsp:/usr/local/tomcat/webapps/test/testset.jsp
+      - C:/DEVELOPMENT/tomcat/tomcat2/conf/context.xml:/usr/local/tomcat/conf/context.xml
+      - C:/DEVELOPMENT/tomcat/tomcat2/conf/redisson.conf:/usr/local/tomcat/conf/redisson.conf
+      - C:/DEVELOPMENT/tomcat/tomcat2/lib/redisson-all-3.16.1.jar:/usr/local/tomcat/lib/redisson-all-3.16.1.jar
+      - C:/DEVELOPMENT/tomcat/tomcat2/lib/redisson-tomcat-10-3.16.1.jar:/usr/local/tomcat/lib/redisson-tomcat-10-3.16.1.jar
+    environment:
+      CATALINA_OPTS: "-Dcatalina.session.manager=redis -Dcatalina.session.store_directory=redis://redis-session-store:6379/0"
+    network_mode:
+      bridge
+    networks:
+      - tomcatredis
+

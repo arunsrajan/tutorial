@@ -1,0 +1,27 @@
+version: '3'
+services:
+  node1:
+    image: jboss/infinispan-server
+    environment:
+      JAVA_OPTS: "-Djboss.node.name=node1"
+      INFINISPAN_CLUSTER_PASSWORD: "infinispan"
+    networks:
+      - infinispan-network
+  node2:
+    image: jboss/infinispan-server
+    environment:
+      JAVA_OPTS: "-Djboss.node.name=node2"
+      INFINISPAN_CLUSTER_PASSWORD: "infinispan"
+    networks:
+      - infinispan-network
+  node3:
+    image: jboss/infinispan-server
+    environment:
+      JAVA_OPTS: "-Djboss.node.name=node3"
+      INFINISPAN_CLUSTER_PASSWORD: "infinispan"
+    networks:
+      - infinispan-network
+
+networks:
+  infinispan-network:
+    driver: bridge
