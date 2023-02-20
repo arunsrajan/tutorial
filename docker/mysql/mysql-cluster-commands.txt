@@ -1,0 +1,24 @@
+docker network create mysql --subnet=174.17.0.0/16
+
+docker run -d --net=mysql --hostname management1 -v "C:/DEVELOPMENT/mysql/ndb_mgmd:/var/lib/mysql" -v "C:/DEVELOPMENT/mysql/my.cnf:/etc/my.cnf" -v "C:/DEVELOPMENT/mysql/mysql-cluster.cnf:/etc/mysql-cluster.cnf"   --name=management1 --ip=174.17.0.2 mysql/mysql-cluster:8.0.32 ndb_mgmd --ndb-nodeid=1 --reload --initial
+
+docker run -d --net=mysql -v "C:/DEVELOPMENT/mysql/ndb1:/var/lib/mysql"  -v "C:/DEVELOPMENT/mysql/mysql-cluster.cnf:/etc/mysql-cluster.cnf" --name=ndb1 --ip=174.17.0.3 mysql/mysql-cluster ndbd --ndb-nodeid=2 --connect-string 174.17.0.2
+
+docker run -d --net=mysql -v "C:/DEVELOPMENT/mysql/ndb2:/var/lib/mysql"  -v "C:/DEVELOPMENT/mysql/mysql-cluster.cnf:/etc/mysql-cluster.cnf" --name=ndb2 --ip=174.17.0.4 mysql/mysql-cluster ndbd --ndb-nodeid=3 --connect-string 174.17.0.2
+
+docker run -d -v "C:/DEVELOPMENT/mysql/mysqld1:/var/lib/mysql"  -v "C:/DEVELOPMENT/mysql/mysql-cluster.cnf:/etc/mysql-cluster.cnf" --net=mysql --name=mysql1 --ip=174.17.0.10 -e MYSQL_RANDOM_ROOT_PASSWORD=true mysql/mysql-cluster mysqld --ndb-nodeid=4 --ndb-connectstring 174.17.0.2
+
+docker run -d -v "C:/DEVELOPMENT/mysql/mysqld2:/var/lib/mysql"  -v "C:/DEVELOPMENT/mysql/mysql-cluster.cnf:/etc/mysql-cluster.cnf" --net=mysql --name=mysql2 --ip=174.17.0.11 -e MYSQL_RANDOM_ROOT_PASSWORD=true mysql/mysql-cluster mysqld --ndb-nodeid=5 --ndb-connectstring 174.17.0.2
+
+docker exec -it mysql1 mysql -uroot -p
+
+docker exec -it mysql2 mysql -uroot -p
+
+docker logs mysql1
+mysql1 pass - ?:,@6x3%mX83w.6vnaHwK5U@9dy+Ou9O
+
+
+docker logs mysql2
+mysql2 pass - 6D6f+AWxcs:+KZ8O+52:1Mh?KWJ/^12r
+
+docker run -it --net=mysql mysql/mysql-cluster ndb_mgm --connect-string 174.17.0.2
