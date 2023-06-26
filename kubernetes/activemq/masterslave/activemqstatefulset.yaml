@@ -1,0 +1,205 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: activemq-broker1
+  labels:
+    app: activemq
+    broker: broker1
+spec:
+  serviceName: broker1
+  replicas: 1
+  selector:
+    matchLabels:
+      app: activemq
+      broker: broker1
+  template:
+    metadata:
+      labels:
+        app: activemq
+        broker: broker1
+    spec:
+      containers:
+        - name: activemq
+          image: rmohr/activemq:latest
+          ports:
+            - containerPort: 61616
+              name: proto
+            - containerPort: 8161
+              name: web
+            
+          volumeMounts:
+            - name: data1
+              mountPath: /opt/activemq/data
+            - name: config-volume1
+              mountPath: /opt/activemq/conf/activemq.xml
+              subPath: activemq.xml
+      volumes:
+        - name: config-volume1
+          configMap:
+            name: activemq-broker-config
+            items:
+                - key: activemq.xml
+                  path: activemq.xml          
+  volumeClaimTemplates:
+        - metadata:
+            name: data1
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 2Gi
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: activemq-broker2
+  labels:
+    app: activemq
+    broker: broker2
+spec:
+  serviceName: broker2
+  replicas: 1
+  selector:
+    matchLabels:
+      app: activemq
+      broker: broker2
+  template:
+    metadata:
+      labels:
+        app: activemq
+        broker: broker2
+    spec:
+      containers:
+        - name: activemq
+          image: rmohr/activemq:latest
+          ports:
+            - containerPort: 61616
+              name: proto
+            - containerPort: 8161
+              name: web
+          volumeMounts:
+            - name: data2
+              mountPath: /opt/activemq/data
+            - name: config-volume2
+              mountPath: /opt/activemq/conf/activemq.xml
+              subPath: activemq.xml
+      volumes:
+        - name: config-volume2
+          configMap:
+            name: activemq-broker-config
+            items:
+              - key: activemq.xml
+                path: activemq.xml
+  volumeClaimTemplates:
+        - metadata:
+            name: data2
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 2Gi  
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: activemq-broker3
+  labels:
+    app: activemq
+    broker: broker3
+spec:
+  serviceName: broker3
+  replicas: 1
+  selector:
+    matchLabels:
+      app: activemq
+      broker: broker3
+  template:
+    metadata:
+      labels:
+        app: activemq
+        broker: broker3
+    spec:
+      containers:
+        - name: activemq
+          image: rmohr/activemq:latest
+          ports:
+            - containerPort: 61616
+              name: proto
+            - containerPort: 8161
+              name: web
+          volumeMounts:
+            - name: data3
+              mountPath: /opt/activemq/data
+            - name: config-volume3
+              mountPath: /opt/activemq/conf/activemq.xml
+              subPath: activemq.xml
+      volumes:
+        - name: config-volume3
+          configMap:
+            name: activemq-broker-config
+            items:
+              - key: activemq.xml
+                path: activemq.xml
+  volumeClaimTemplates:
+        - metadata:
+            name: data3
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 2Gi    
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: activemq-broker4
+  labels:
+    app: activemq
+    broker: broker4
+spec:
+  serviceName: broker4
+  replicas: 1
+  selector:
+    matchLabels:
+      app: activemq
+      broker: broker4
+  template:
+    metadata:
+      labels:
+        app: activemq
+        broker: broker4
+    spec:
+      containers:
+        - name: activemq
+          image: rmohr/activemq:latest
+          ports:
+            - containerPort: 61616
+              name: proto
+            - containerPort: 8161
+              name: web
+          volumeMounts:
+            - name: data4
+              mountPath: /opt/activemq/data
+            - name: config-volume4
+              mountPath: /opt/activemq/conf/activemq.xml
+              subPath: activemq.xml
+      volumes:
+        - name: config-volume4
+          configMap:
+            name: activemq-broker-config
+            items:
+              - key: activemq.xml
+                path: activemq.xml
+  volumeClaimTemplates:
+        - metadata:
+            name: data4
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 2Gi     
+
