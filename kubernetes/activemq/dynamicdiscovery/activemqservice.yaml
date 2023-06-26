@@ -1,0 +1,62 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: broker1
+  labels:
+    app: activemq
+    broker: broker1
+spec:
+  selector:
+    app: activemq
+    broker: broker1
+  ports:
+    - name: proto
+      protocol: TCP
+      port: 61616
+      targetPort: 61616
+    - name: web
+      protocol: TCP
+      port: 8161
+      targetPort: 8161
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: broker2
+  labels:
+    app: activemq
+    broker: broker2
+spec:
+  selector:
+    app: activemq
+    broker: broker2
+  ports:
+    - name: proto
+      protocol: TCP
+      port: 61616
+      targetPort: 61616
+    - name: web
+      protocol: TCP
+      port: 8161
+      targetPort: 8161
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: broker3
+  labels:
+    app: activemq
+    broker: broker3
+spec:
+  selector:
+    app: activemq
+    broker: broker3
+  ports:
+    - name: proto
+      protocol: TCP
+      port: 61616
+      targetPort: 61616
+    - name: web
+      protocol: TCP
+      port: 8161
+      targetPort: 8161

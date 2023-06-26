@@ -1,0 +1,121 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: activemq-broker1
+  labels:
+    app: activemq
+    broker: broker1
+spec:
+  serviceName: broker1
+  replicas: 1
+  selector:
+    matchLabels:
+      app: activemq
+      broker: broker1
+  template:
+    metadata:
+      labels:
+        app: activemq
+        broker: broker1
+    spec:
+      containers:
+        - name: activemq
+          image: rmohr/activemq:latest
+          ports:
+            - containerPort: 61616
+              name: proto
+            - containerPort: 8161
+              name: web
+            
+          volumeMounts:
+            - name: config-volume
+              mountPath: /opt/activemq/conf/activemq.xml
+              subPath: activemq.xml
+      volumes:
+        - name: config-volume
+          configMap:
+            name: activemq-broker1-config
+            items:
+              - key: activemq.xml
+                path: activemq.xml
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: activemq-broker2
+  labels:
+    app: activemq
+    broker: broker2
+spec:
+  serviceName: broker2
+  replicas: 1
+  selector:
+    matchLabels:
+      app: activemq
+      broker: broker2
+  template:
+    metadata:
+      labels:
+        app: activemq
+        broker: broker2
+    spec:
+      containers:
+        - name: activemq
+          image: rmohr/activemq:latest
+          ports:
+            - containerPort: 61616
+              name: proto
+            - containerPort: 8161
+              name: web
+          volumeMounts:
+            - name: config-volume
+              mountPath: /opt/activemq/conf/activemq.xml
+              subPath: activemq.xml
+      volumes:
+        - name: config-volume
+          configMap:
+            name: activemq-broker2-config
+            items:
+              - key: activemq.xml
+                path: activemq.xml
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: activemq-broker3
+  labels:
+    app: activemq
+    broker: broker3
+spec:
+  serviceName: broker3
+  replicas: 1
+  selector:
+    matchLabels:
+      app: activemq
+      broker: broker3
+  template:
+    metadata:
+      labels:
+        app: activemq
+        broker: broker3
+    spec:
+      containers:
+        - name: activemq
+          image: rmohr/activemq:latest
+          ports:
+            - containerPort: 61616
+              name: proto
+            - containerPort: 8161
+              name: web
+          volumeMounts:
+            - name: config-volume
+              mountPath: /opt/activemq/conf/activemq.xml
+              subPath: activemq.xml
+      volumes:
+        - name: config-volume
+          configMap:
+            name: activemq-broker3-config
+            items:
+              - key: activemq.xml
+                path: activemq.xml
+
