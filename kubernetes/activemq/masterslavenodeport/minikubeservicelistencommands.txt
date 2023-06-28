@@ -1,0 +1,4 @@
+minikube service broker1-service --profile activemqms
+minikube service broker2-service --profile activemqms
+minikube service broker3-service --profile activemqms
+minikube service broker4-service --profile activemqms
