@@ -1,0 +1,2 @@
+minikube start --driver docker --profile activemqmassla --mount=true --mount-string=C:\DEVELOPMENT\activemqkube:/minikube-host
+minikube service broker-service --profile activemqmassla

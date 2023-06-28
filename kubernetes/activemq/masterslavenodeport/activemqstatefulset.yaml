@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: activemq-broker
+  labels:
+    app: activemq
+    broker: broker
+spec:
+  serviceName: broker
+  replicas: 1
+  selector:
+    matchLabels:
+      app: activemq
+      broker: broker
+  template:
+    metadata:
+      labels:
+        app: activemq
+        broker: broker
+    spec:
+      containers:
+        - name: activemq
+          image: rmohr/activemq:latest
+          ports:
+            - containerPort: 61616
+              name: proto
+            - containerPort: 8161
+              name: web
+            
+          volumeMounts:
+            - name: data1
+              mountPath: /opt/activemq/data
+            - name: config-volume1
+              mountPath: /opt/activemq/conf/activemq.xml
+              subPath: activemq.xml
+      volumes:
+        - name: config-volume1
+          configMap:
+            name: activemq-broker-config
+            items:
+                - key: activemq.xml
+                  path: activemq.xml          
+  volumeClaimTemplates:
+        - metadata:
+            name: data1
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 2Gi
