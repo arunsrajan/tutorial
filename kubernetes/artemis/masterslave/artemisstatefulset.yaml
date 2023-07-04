@@ -1,0 +1,113 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: artemismaster
+  labels:
+    app: artemis
+    broker: master
+spec:
+  serviceName: artemismaster
+  replicas: 1
+  selector:
+    matchLabels:
+      app: artemis
+      broker: master
+  template:
+    metadata:
+      labels:
+        app: artemis
+        broker: master
+    spec:
+      containers:
+        - name: artemis
+          image: vromero/activemq-artemis:latest
+          env:
+            - name: AMQ_USER
+              value: admin
+            - name: AMQ_PASSWORD
+              value: admin  
+          ports:
+            - containerPort: 61616
+              name: proto
+            - containerPort: 8161
+              name: web
+            
+          volumeMounts:
+            - name: artemis1
+              mountPath: /var/lib/artemis/data
+            - name: config-volume1
+              mountPath: /var/lib/artemis/etc/broker.xml
+              subPath: broker.xml
+      volumes:
+        - name: config-volume1
+          configMap:
+            name: artemis-master-config
+            items:
+                - key: artemismaster.xml
+                  path: broker.xml          
+  volumeClaimTemplates:
+        - metadata:
+            name: artemis1
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 2Gi
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: artemisslave
+  labels:
+    app: artemis
+    broker: slave
+spec:
+  serviceName: artemisslave
+  replicas: 1
+  selector:
+    matchLabels:
+      app: artemis
+      broker: slave
+  template:
+    metadata:
+      labels:
+        app: artemis
+        broker: slave
+    spec:
+      containers:
+        - name: artemis
+          image: vromero/activemq-artemis:latest
+          env:
+            - name: AMQ_USER
+              value: admin
+            - name: AMQ_PASSWORD
+              value: admin 
+          ports:
+            - containerPort: 61616
+              name: proto
+            - containerPort: 8161
+              name: web
+            
+          volumeMounts:
+            - name: artemis2
+              mountPath: /var/lib/artemis/data
+            - name: config-volume2
+              mountPath: /var/lib/artemis/etc/broker.xml
+              subPath: broker.xml
+      volumes:
+        - name: config-volume2
+          configMap:
+            name: artemis-slave-config
+            items:
+                - key: artemisslave.xml
+                  path: broker.xml          
+  volumeClaimTemplates:
+        - metadata:
+            name: artemis2
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 2Gi

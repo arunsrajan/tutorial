@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: artemismaster
+  labels:
+    app: artemis
+    broker: master
+spec:
+  type: ClusterIP
+  selector:
+    app: artemis
+    broker: master
+  ports:
+    - name: proto
+      protocol: TCP
+      port: 61616
+      targetPort: 61616
+    - name: web
+      protocol: TCP
+      port: 8161
+      targetPort: 8161
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: artemisslave
+  labels:
+    app: artemis
+    broker: slave
+spec:
+  type: ClusterIP
+  selector:
+    app: artemis
+    broker: slave
+  ports:
+    - name: proto
+      protocol: TCP
+      port: 61616
+      targetPort: 61616
+    - name: web
+      protocol: TCP
+      port: 8161
+      targetPort: 8161
