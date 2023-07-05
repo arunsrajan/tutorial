@@ -1,0 +1,8 @@
+minikube start --profile solr --mount=true --mount-string=C:\DEVELOPMENT\solr:/minikube-host
+minikube -p solr addons enable metrics-server
+helm install solr oci://registry-1.docker.io/bitnamicharts/solr --set collectionShards=1,collectionReplicas=1,replicaCount=1,image.tag=8.11.2-debian-11-r126,volumePermissions.enabled=true,persistence.storageClass=standard,persistence.enabled=true,persistence.size=8Gi,zookeeper.enabled=true,persistence.mountPath=/bitnami/solr,zookeeper.persistence.enabled=true,zookeeper.persistence.storageClass=standard,zookeeper.persistence.size=2Gi,zookeeper.replicaCount=3,livenessProbe.enabled=false,readinessProbe.enabled=false,zookeeper.volumePermissions.enabled=true,zookeeper.auth.client.enabled=false,resources.limits.cpu=500m,resources.limits.memory=512Mi,heap=256m,resources.requests.cpu=300m,resources.requests.memory=300Mi
+
+
+kubectl port-forward --address "0.0.0.0" svc/solr 8983:8983
+kubectl get hpa solr-hpa --watch
+

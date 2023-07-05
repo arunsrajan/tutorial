@@ -1,0 +1,18 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: solr-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: StatefulSet  # StatefulSet for Solr
+    name: solr
+  minReplicas: 1  # Minimum number of replicas
+  maxReplicas: 3  # Maximum number of replicas
+  metrics:
+  - type: Resource  # or Object for custom metrics
+    resource:
+      name: cpu  # Replace with the appropriate resource name (e.g., memory)
+      target:
+        type: Utilization
+        averageUtilization: 20
