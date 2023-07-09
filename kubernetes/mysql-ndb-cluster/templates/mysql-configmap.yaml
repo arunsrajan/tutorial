@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysqlclustercnf-configmap
+data:
+  mysql-cluster.cnf: |
+    [ndbd default]
+    NoOfReplicas={{ .Values.ndbReplicaCount }}
+    DataMemory=80M
+    IndexMemory=18M
+    [ndb_mgmd]
+    NodeId={{ .Values.managementNodeId }}
+    hostname={{ .Values.managementName }}-0
+    datadir=/var/lib/mysql
+    {{- $endIndex := (int (add (int (toString .Values.startIndex)) (int (toString .Values.ndbReplicaCount)))) }}
+    {{- $rangestep := untilStep (int .Values.startIndex) $endIndex (int 1) -}}
+    {{- range $index, $i := $rangestep }}
+    [ndbd]
+    NodeId={{ $i }}
+    hostname=ndbd-{{- $i -}}-0.ndbd-{{- $i -}}-0.default.svc.cluster.local
+    datadir=/var/lib/mysql
+    {{- end }}
+    {{- $rangestep := untilStep (int .Values.mysqlStartIndex) (int .Values.mysqlEndIndex) (int 1) -}}
+    {{- range $index, $i := $rangestep }}
+    [mysqld]
+    NodeId={{ $i }}
+    hostname=mysql-{{- $i -}}-0.mysql-{{- $i -}}-0.default.svc.cluster.local
+    datadir=/var/lib/mysql
+    {{- end }}

@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mycnf-configmap
+data:
+  my.cnf: |
+    [ndbd]
+    connect-string={{ .Values.managementName }}-0
+    
+    [ndb_mgm]
+    connect-string={{ .Values.managementName }}-0
+    
+    [mysqld]
+    user=mysql
+    ndbcluster
+    ndb-connectstring={{ .Values.managementName }}-0
+    default_storage_engine=ndbcluster
+    datadir=/var/lib/mysql
+    
+    [mysql_cluster]
+    ndb-connectstring={{ .Values.managementName }}-0    

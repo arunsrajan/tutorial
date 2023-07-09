@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-ini-configmap
+data:
+  config.ini: |
+    [ndb_mgmd default] 
+    DataDir=/var/lib/mysql
+    
+    [ndbd default]
+    DataDir=/var/lib/mysql
+    DataMemory=256M
+    NoOfReplicas={{ .Values.ndbReplicaCount }}
+    
+    [tcp default]
+    AllowUnresolvedHostnames=1
+    
+    [ndb_mgmd]
+    Hostname=management-0
+    PortNumber=1186
+    
+    {{- $endIndex := (int (add (int (toString .Values.startIndex)) (int (toString .Values.ndbReplicaCount)))) }}
+    {{- $rangestep := untilStep (int .Values.startIndex) $endIndex (int 1) -}}
+    {{- range $index, $i := $rangestep }}
+    
+    [ndbd]
+    ServerPort=1186
+    Hostname=ndbd-{{- $i -}}-0.ndbd-{{- $i -}}-0.default.svc.cluster.local
+    
+    {{- end }}
+    
+    {{- $rangestep := untilStep (int .Values.mysqlStartIndex) (int .Values.mysqlEndIndex) (int 1) -}}
+    {{- range $index, $i := $rangestep }}
+    
+    [mysqld]
+    Hostname=mysql-{{- $i -}}-0.mysql-{{- $i -}}-0.default.svc.cluster.local
+    
+    {{- end }}

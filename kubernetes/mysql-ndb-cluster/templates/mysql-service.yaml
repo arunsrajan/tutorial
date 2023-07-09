@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: management-0
+  labels:
+    app: management
+spec:
+  type: ClusterIP
+  selector:
+    app: management
+  ports:
+    - name: ndb-management-port
+      protocol: TCP
+      port: 1186
+      targetPort: 1186
+---
+{{- $rangestep := untilStep (int .Values.mysqlStartIndex) (int .Values.mysqlEndIndex) (int 1) -}}
+{{- range $index, $i := $rangestep }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-{{ $i }}-0
+  labels:
+    app: mysql-{{ $i }}-0
+spec:
+  type: ClusterIP
+  selector:
+    app: mysql-{{ $i }}-0
+  ports:
+    - name: mysql-server-port
+      protocol: TCP
+      port: 3306
+      targetPort: 3306
+---
+{{- end }}
+{{- $endIndex := (int (add (int (toString .Values.startIndex)) (int (toString .Values.ndbReplicaCount)))) }}
+    {{- $rangestep := untilStep (int .Values.startIndex) $endIndex (int 1) -}}
+    {{- range $index, $i := $rangestep }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: ndbd-{{ $i }}-0
+  labels:
+    app: ndbd-{{ $i }}-0
+spec:
+  type: ClusterIP
+  clusterIP: None
+  selector:
+    app: ndbd-{{ $i }}-0
+  ports:
+    - name: ndb-port
+      protocol: TCP
+      port: 11100
+      targetPort: 11100
+---
+{{- end }}

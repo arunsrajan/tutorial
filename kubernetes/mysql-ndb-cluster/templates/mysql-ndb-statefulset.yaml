@@ -1,0 +1,198 @@
+{{- $endIndex := (int (add (int (toString .Values.startIndex)) (int (toString .Values.ndbReplicaCount)))) }}
+{{- $rangestep := untilStep (int .Values.startIndex) $endIndex (int 1) -}}
+{{- range $index, $i := $rangestep }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: ndbd-{{ $i }}
+  labels:
+    app: ndbd-{{ $i }}-0
+spec:
+  serviceName: ndbd-{{ $i }}-0
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ndbd-{{ $i }}-0
+  template:
+    metadata:
+      labels:
+        app: ndbd-{{ $i }}-0
+    spec:
+      containers:
+        - name: ndbd
+          image: registry-1.docker.io/mysql/mysql-cluster:8.0.32
+          ports:
+            - containerPort: 11100
+              name: ndbd-port
+          command: ["/bin/bash"]
+          args:
+          -  -ecx 
+          - /usr/sbin/ndbd --ndb-nodeid={{ $i }} -c management-0 --initial --nodaemon -v
+          volumeMounts:
+            - name: ndbd
+              mountPath: /var/lib/mysql
+            - name: config-mycnf-cluster-etc
+              mountPath: /etc/my.cnf
+              subPath: my.cnf
+            - name: config-config-ini-etc
+              mountPath: /var/lib/mysql/config/config.ini
+              subPath: config.ini
+      volumes:
+        - name: config-mycnf-cluster-etc
+          configMap:
+            name: mycnf-configmap
+            items:
+                - key: my.cnf
+                  path: my.cnf
+        - name: config-config-ini-etc
+          configMap:
+            name: config-ini-configmap
+            items:
+            - key: config.ini
+              path: config.ini
+  volumeClaimTemplates:
+        - metadata:
+            name: ndbd
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 2Gi
+---
+{{- end }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: management
+  labels:
+    app: management
+spec:
+  serviceName: management
+  replicas: 1
+  selector:
+    matchLabels:
+      app: management
+  template:
+    metadata:
+      labels:
+        app: management
+    spec:      
+      containers:
+        - name: ndb-mgmd
+          image: registry-1.docker.io/mysql/mysql-cluster:8.0.32
+          ports:
+            - containerPort: 1186
+              name: ndb-mgmd-port
+          volumeMounts:
+            - name: ndb-mgmd
+              mountPath: /var/lib/mysql
+            - name: config-mysql-cluster-etc
+              mountPath: /etc/mysql-cluster.cnf
+              subPath: mysql-cluster.cnf
+            - name: config-mycnf-cluster-etc
+              mountPath: /etc/my.cnf
+              subPath: my.cnf
+            - name: config-config-ini-etc
+              mountPath: /var/lib/mysql/config/config.ini
+              subPath: config.ini
+          command: ["/bin/bash"]
+          args:
+            -  -ecx 
+            - /usr/sbin/ndb_mgmd --ndb-nodeid=1 -f /var/lib/mysql/config/config.ini --configdir=/var/lib/mysql --initial --nodaemon --config-cache=0 -v
+      volumes:
+        - name: config-mysql-cluster-etc
+          configMap:
+            name: mysqlclustercnf-configmap
+            items:
+            - key: mysql-cluster.cnf
+              path: mysql-cluster.cnf
+        - name: config-mycnf-cluster-etc
+          configMap:
+            name: mycnf-configmap
+            items:
+            - key: my.cnf
+              path: my.cnf
+        - name: config-config-ini-etc
+          configMap:
+            name: config-ini-configmap
+            items:
+            - key: config.ini
+              path: config.ini
+  volumeClaimTemplates:
+        - metadata:
+            name: ndb-mgmd
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 2Gi
+---
+{{- $rangestep := untilStep (int .Values.mysqlStartIndex) (int .Values.mysqlEndIndex) (int 1) -}}
+{{- range $index, $i := $rangestep }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql-{{ $i }}
+  labels:
+    app: mysql-{{ $i }}-0
+spec:
+  serviceName: mysql-{{ $i }}-0
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql-{{ $i }}-0
+  template:
+    metadata:
+      labels:
+        app: mysql-{{ $i }}-0
+    spec:
+      containers:
+        - name: mysql
+          image: registry-1.docker.io/mysql/mysql-cluster:8.0.32
+          env:
+            - name: MYSQL_RANDOM_ROOT_PASSWORD
+              value: "true"
+          ports:
+            - containerPort: 3306
+              name: mysql-port
+          volumeMounts:
+            - name: mysql-server
+              mountPath: /var/lib/mysql
+            - name: config-mysql-cluster
+              mountPath: /etc/mysql-cluster.cnf
+              subPath: mysql-cluster.cnf
+            - name: config-mycnf-cluster-etc
+              mountPath: /etc/my.cnf
+              subPath: my.cnf
+      volumes:
+        - name: config-mysql-cluster
+          configMap:
+            name: mysqlclustercnf-configmap
+            items:
+                - key: mysql-cluster.cnf
+                  path: mysql-cluster.cnf
+        - name: config-mycnf-cluster-etc
+          configMap:
+            name: mycnf-configmap
+            items:
+                - key: my.cnf
+                  path: my.cnf
+        - name: config-config-ini-etc
+          configMap:
+            name: config-ini-configmap
+            items:
+            - key: config.ini
+              path: config.ini
+  volumeClaimTemplates:
+        - metadata:
+            name: mysql-server
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 2Gi
+---
+{{- end }}

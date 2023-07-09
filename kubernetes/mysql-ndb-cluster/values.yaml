@@ -1,0 +1,12 @@
+# Default values for mysql-ndb-cluster.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+ndbReplicaCount: 3
+managementName: management
+mysqlServerName: mysql
+managementNodeId: 1
+startIndex: 2
+endIndex: 100
+mysqlStartIndex: 101
+mysqlEndIndex: 102
