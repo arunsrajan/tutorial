@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sftp1-configmap
+data:
+  users.conf: |
+    john:123:1001:100
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sftp2-configmap
+data:
+  users.conf: |
+    tom:456:1001:100

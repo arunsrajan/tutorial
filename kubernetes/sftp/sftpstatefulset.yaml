@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: sftp1
+  labels:
+    app: sftp1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sftp1
+  template:
+    metadata:
+      labels:
+        app: sftp1
+    spec:
+      containers:
+        - name: sftp
+          image: atmoz/sftp:latest          
+          ports:
+            - containerPort: 22
+              name: sftpport
+          volumeMounts:
+            - name: sftpvolume
+              mountPath: /home/john/upload
+            - name: sftp1-config
+              mountPath: /etc/sftp/users.conf
+              subPath: users.conf
+      volumes:
+        - name: sftp1-config
+          configMap:
+            name: sftp1-configmap
+            items:
+                - key: users.conf
+                  path: users.conf
+  volumeClaimTemplates:
+        - metadata:
+            name: sftpvolume
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 2Gi
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: sftp2
+  labels:
+    app: sftp2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sftp2
+  template:
+    metadata:
+      labels:
+        app: sftp2
+    spec:
+      containers:
+        - name: sftp
+          image: atmoz/sftp:latest          
+          ports:
+            - containerPort: 22
+              name: sftpport
+          volumeMounts:
+            - name: sftpvolume
+              mountPath: /home/tom/upload
+            - name: sftp2-config
+              mountPath: /etc/sftp/users.conf
+              subPath: users.conf
+      volumes:
+        - name: sftp2-config
+          configMap:
+            name: sftp2-configmap
+            items:
+                - key: users.conf
+                  path: users.conf
+  volumeClaimTemplates:
+        - metadata:
+            name: sftpvolume
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 2Gi
