@@ -1,0 +1,83 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: solr-0
+spec:
+  capacity:
+    storage: 8Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /minikube-host/solrkube0
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: solr-1
+spec:
+  capacity:
+    storage: 8Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /minikube-host/solrkube1
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: solr-2
+spec:
+  capacity:
+    storage: 8Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /minikube-host/solrkube2
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: zookeeper-0
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /minikube-host/zookeeper0
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: zookeeper-1
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /minikube-host/zookeeper1
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: zookeeper-2
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /minikube-host/zookeeper2

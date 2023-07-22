@@ -1,0 +1,5 @@
+minikube start --driver=docker --mount=true --mount-string=C:\DEVELOPMENT\solrkube:/minikube-host --nodes=2
+
+helm install solr oci://registry-1.docker.io/bitnamicharts/solr --set volumePermissions.enabled=true,persistence.storageClass=standard,persistence.enabled=true,persistence.size=8Gi,zookeeper.enabled=true,persistence.mountPath=/bitnami/solr,zookeeper.persistence.enabled=true,zookeeper.persistence.storageClass=standard,zookeeper.persistence.size=2Gi,zookeeper.replicaCount=3,livenessProbe.enabled=false,readinessProbe.enabled=false,zookeeper.volumePermissions.enabled=true,zookeeper.auth.client.enabled=false,auth.adminPassword=admin12345@,auth.adminUsername=arun
+
+java -Dbasicauth=arun:admin12345@ -Durl=http://localhost:8983/solr/amazon/update -Dtype=text/csv -jar post.jar marketing_sample_for_amazon_com-ecommerce__20200101_20200131__10k_data.csv
