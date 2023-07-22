@@ -1,0 +1,10 @@
+minikube start -p ndbcluster --driver docker
+helm repo add ndb-operator-repo https://mysql.github.io/mysql-ndb-operator/
+helm repo update
+
+helm install ndb-operator ndb-operator-repo/ndb-operator --namespace=ndb-operator --create-namespace --set image=mysql/ndb-operator:8.0.32
+kubectl get pods -n ndb-operator --watch
+
+kubectl apply -f https://raw.githubusercontent.com/mysql/mysql-ndb-operator/main/docs/examples/example-ndb.yaml
+kubectl port-forward --address "0.0.0.0" -n ndb-operator pod/example-ndb-mysqld-0 3306:3306
+kubectl port-forward --address "0.0.0.0" -n ndb-operator pod/example-ndb-mysqld-1 3307:3306
