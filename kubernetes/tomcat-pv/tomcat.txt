@@ -1,0 +1,3 @@
+helm install tomcat oci://registry-1.docker.io/bitnamicharts/tomcat --set replicaCount=1,deployment.type=statefulset,persistence.enabled=true,persistence.storageClass=standard,persistence.size=4Gi,tomcatPassword=3Bb3N4c3Mj
+
+kubectl port-forward --address "0.0.0.0" svc/tomcat 8091:80
