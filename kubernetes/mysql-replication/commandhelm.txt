@@ -1,0 +1,8 @@
+minikube start --profile mysqlreplica --driver docker --mount=true --mount-string=C:\DEVELOPMENT\mysqlkubernetes:/minikube-host
+
+
+helm install mysql --set auth.rootPassword=admin12345$,auth.database=app_database,secondary.persistence.enabled=true,secondary.persistence.size=8Gi,primary.persistence.enabled=true,primary.persistence.size=8Gi,architecture=replication,auth.replicationPassword=admin12345$,secondary.replicaCount=2 oci://registry-1.docker.io/bitnamicharts/mysql
+
+
+kubectl port-forward --address "0.0.0.0" svc/mysql-primary 3306:3306
+kubectl port-forward --address "0.0.0.0" svc/mysql-secondary 3307:3306
