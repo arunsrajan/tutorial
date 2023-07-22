@@ -1,0 +1,5 @@
+docker run -d --network=mesos --name=zook -p 2181:2181 netflixoss/exhibitor:1.5.2
+
+docker run -d --network=mesos --name=mesos-master -p 5050:5050 -e MESOS_PORT=5050 -e MESOS_ZK=zk://zook:2181/mesos -e MESOS_QUORUM=1 -e MESOS_REGISTRY=in_memory -e MESOS_LOG_DIR=/var/log/mesos -v "C:/DEVELOPMENT/spark-sql-yarn/spark-3.4.0-bin-hadoop3:/usr/local/spark" -e MESOS_WORK_DIR=/var/tmp/mesos -v "C:/DEVELOPMENT/mesos/log/mesos:/var/log/mesos" -v "C:/DEVELOPMENT/mesos/tmp/mesos:/var/tmp/mesos" mesosphere/mesos-master:1.6.2
+
+docker run -d --network=mesos --name=mesos-slave -p 5051:5051 --privileged -e MESOS_SYSTEMD_ENABLE_SUPPORT=false -e MESOS_PORT=5051 -e MESOS_MASTER=zk://zook:2181/mesos -e MESOS_SWITCH_USER=0 -e MESOS_CONTAINERIZERS=docker,mesos -e MESOS_LOG_DIR=/var/log/mesos -e MESOS_WORK_DIR=/var/tmp/mesos -v "C:/DEVELOPMENT/mesos/slave/log/mesos:/var/log/mesos" -v "C:/DEVELOPMENT/mesos/slave/tmp/mesos:/var/tmp/mesos" -v /var/run/docker.sock:/var/run/docker.sock -v /cgroup:/cgroup -v /sys:/sys -v /usr/local/bin/docker:/usr/local/bin/docker mesosphere/mesos-slave:1.6.2
