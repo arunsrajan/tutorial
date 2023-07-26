@@ -1,0 +1,88 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>2.7.7</version>
+		<relativePath /> <!-- lookup parent from repository -->
+	</parent>
+	<groupId>com.cjt.migration</groupId>
+	<artifactId>artemis-to-ibmmq</artifactId>
+	<version>
+		0.0.1-SNAPSHOT</version>
+	<packaging>jar</packaging>
+
+	<name>artemis-to-ibmmq</name>
+	<url>
+		http://maven.apache.org</url>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<java.version>17</java.version>
+	</properties>
+	<dependencyManagement>
+		<dependencies>
+			<!-- Camel BOM -->
+			<dependency>
+				<groupId>org.apache.camel.springboot</groupId>
+				<artifactId>camel-spring-boot-bom</artifactId>
+				<version>3.20.0</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<!-- ... other BOMs or dependencies ... -->
+		</dependencies>
+	</dependencyManagement>
+	<dependencies>
+		<dependency>
+			<groupId>
+				junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>3.8.1</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.camel.springboot</groupId>
+			<artifactId>camel-spring-starter</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.camel.springboot</groupId>
+			<artifactId>camel-jms-starter</artifactId>
+		</dependency>
+		<!-- Apache Artemis JMS client -->
+		<dependency>
+			<groupId>org.apache.activemq</groupId>
+			<artifactId>artemis-jms-client</artifactId>
+		</dependency>
+		<!-- IBM MQ JMS client -->
+		<!-- https://mvnrepository.com/artifact/com.ibm.mq/com.ibm.mq.allclient -->
+		<dependency>
+			<groupId>com.ibm.mq</groupId>
+			<artifactId>com.ibm.mq.allclient</artifactId>
+			<version>9.2.4.0</version>
+		</dependency>
+	</dependencies>
+	<build>
+		<finalName>springbootcamel</finalName>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<excludes>
+						<exclude>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>

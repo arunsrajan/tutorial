@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:camel="http://camel.apache.org/schema/spring"
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+		<!-- JMS configuration for Apache Artemis -->
+        <bean id="artemisConnectionFactory" class="org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory">
+            <!-- Set Artemis broker URL, username, and password -->
+            <property name="brokerURL" value="tcp://localhost:33333"/>
+            <property name="user" value="admin"/>
+            <property name="password" value="admin"/>
+        </bean>
+		
+		<bean id="adapterWMQ" class="org.springframework.jms.connection.UserCredentialsConnectionFactoryAdapter">
+			<property name="username" value="admin"/>
+            <property name="password" value="admin"/>
+            <property name="targetConnectionFactory" ref="ibmMQConnectionFactory"/>
+		</bean>
+	
+        <!-- JMS configuration for IBM MQ -->
+        <bean id="ibmMQConnectionFactory" class="com.ibm.mq.jms.MQConnectionFactory">
+            <!-- Set IBM MQ connection properties -->
+            <property name="transportType" value="1"/> <!-- 1 for client mode, 0 for bindings mode -->
+            <property name="queueManager" value="QM1"/>
+            <property name="hostName" value="localhost"/>
+            <property name="port" value="14141"/>
+            <property name="channel" value="DEV.ADMIN.SVRCONN"/>
+        </bean>
+    <!-- Define the Camel context -->
+    <camelContext xmlns="http://camel.apache.org/schema/spring">
+
+        
+
+        <!-- Define the Camel route for message migration -->
+        <route>
+            <from uri="jms:queue:myqueue::queue?connectionFactory=#artemisConnectionFactory"/>
+            <to uri="jms:queue:TEST.QUEUE?connectionFactory=#adapterWMQ"/>
+        </route>
+
+    </camelContext>
+
+</beans>
