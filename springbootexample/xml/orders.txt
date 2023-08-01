@@ -1,0 +1,14 @@
+<orders>
+<order>
+<type>vegetables</type>
+<quantity>10</quantity>
+</order>
+<order>
+<type>fruits</type>
+<quantity>10</quantity>
+</order>
+<order>
+<type>product</type>
+<quantity>10</quantity>
+</order>
+</orders>
