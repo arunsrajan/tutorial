@@ -1,6 +1,0 @@
-minikube dashboard --url --profile artemismasterslave
-minikube service artemismaster --profile artemismasterslave
-minikube service artemisslave --profile artemismasterslave
-
-user: artemis
-password: simetraehcapa
