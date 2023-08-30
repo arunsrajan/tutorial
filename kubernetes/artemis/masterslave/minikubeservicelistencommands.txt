@@ -1,0 +1,7 @@
+minikube start --network-plugin=cni --cni=weave-daemonset-k8s.yaml --profile weavenettest --driver docker --nodes=3 --mount=true --mount-string=C:\DEVELOPMENT\weave:/minikube-host
+minikube dashboard --url --profile weavenettest
+minikube service artemismaster --profile weavenettest
+minikube service artemisslave --profile weavenettest
+
+user: artemis
+password: simetraehcapa
