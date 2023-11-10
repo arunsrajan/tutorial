@@ -1,0 +1,9 @@
+1. start kubernetes cluster with single node
+2. create separate namespace with name as spark1
+3. create service account for jumppod and spark application
+4. Create PV and PVC from yaml file by copy-pasting to dashboard
+5. Create a jumppod from yaml file by copy-pasting to dashboard
+6. In kubernetes dashboard ssh shell to jumppod and 
+	set environment variables as given in the video description
+7. Start the sql shell or spark shell for the commands given in the
+   video description	

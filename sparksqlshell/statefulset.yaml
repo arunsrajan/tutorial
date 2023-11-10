@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: jump-1
+  namespace: spark1
+  label:
+     app: jump-1
+spec:
+  selector:
+    matchLabels:
+      app: jump-1
+  template:
+    metadata:
+      labels:
+        app: jump-1
+    spec:
+      serviceAccountName: jumppod
+      containers:
+          - name: jumppod
+            image: arunsrajan/jumppod:spark-3.5.0
+            stdin: true
+            stdinOnce: true
+            tty: true
+            volumeMounts:  
+                - mountPath: "/sparkdir"
+                  name: sparkdir
+      volumes:  
+        - name: sparkdir
+          persistentVolumeClaim:  
+            claimName: spark-pv-claim
