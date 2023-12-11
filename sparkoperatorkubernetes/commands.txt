@@ -1,0 +1,7 @@
+minikube start -p sparkoperator --driver docker --cpus 4 --memory 5120 --mount=true --mount-string=C:\DEVELOPMENT\sparkoperator:/minikube-host
+
+helm install spark-operator https://github.com/GoogleCloudPlatform/spark-on-k8s-operator/releases/download/spark-operator-chart-1.1.27/spark-operator-1.1.27.tgz --set sparkJobNamespace=default --set webhook.enable=true --set webhook.port=443 --set webhook.namespaceSelector=""
+
+kubectl apply -f deploysparkapp.yaml
+
+helm uninstall spark-operator
