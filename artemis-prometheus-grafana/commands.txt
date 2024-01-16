@@ -1,0 +1,5 @@
+docker pull arunsrajan/activemq-artemis:2.31.2
+docker network create --driver bridge activemqmonitoring
+docker run -d --network activemqmonitoring --name=grafana -p 3000:3000 grafana/grafana
+docker run -d --network activemqmonitoring --name artemis --hostname artemis -p 8161:8161 -p 61616:61616 arunsrajan/activemq-artemis:2.31.2
+docker run -d --network activemqmonitoring -v C:\DEVELOPMENT\artemis-prometheus\artemis\prometheus.yml:/etc/prometheus/prometheus.yml --name prometheus -e TZ=UTC -p 9090:9090 ubuntu/prometheus:2.46.0-22.04_stable
