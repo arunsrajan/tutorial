@@ -1,0 +1,32 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/bionic64" # Choose your desired base box
+
+  # Specify the number of VMs to spin
+  num_vms = 3
+
+  # Loop through the number of VMs
+  (1..num_vms).each do |i|
+    config.vm.define "vm#{i}" do |vm|
+      vm.vm.hostname = "vm#{i}"
+      vm.vm.network "private_network", ip: "192.168.33.#{10 + i}" # Set the desired IP address
+
+      vm.vm.provider "virtualbox" do |vb|
+        vb.memory = "2048" # Adjust the memory as per your needs
+        vb.cpus = 2 # Adjust the number of CPUs as per your needs
+      end
+
+      vm.vm.provision "shell", inline: <<-SHELL
+        apt-get update
+        apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+        add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
+
+        apt-get update
+        apt-get install -y docker-ce
+
+        usermod -aG docker vagrant # Add the 'vagrant' user to the 'docker' group
+      SHELL
+    end
+  end
+end
