@@ -1,0 +1,15 @@
+docker network create -d overlay hadoopnetwork --attachable
+
+docker node update --label-add type=resourcemanager vm1
+docker node update --label-add type=nodemanager vm2
+docker node update --label-add type=nodemanager vm3
+docker service create --network hadoopnetwork --name resourcemanager --hostname resourcemanagerhost -e "YARN_CONF_yarn_resourcemanager_hostname=resourcemanagerhost" --replicas 1 --constraint node.labels.type==resourcemanager -p 8088:8088 -p 8031:8031 -p 8032:8032 bde2020/hadoop-resourcemanager:latest
+docker service create --network hadoopnetwork --name nodemanager -e "YARN_CONF_yarn_resourcemanager_hostname=resourcemanagerhost" -e "YARN_CONF_yarn_resourcemanager_resource__tracker_address=resourcemanagerhost:8031" --replicas 2 --constraint node.labels.type==nodemanager bde2020/hadoop-nodemanager:latest
+
+
+docker node update --label-add nodetype=namenode vm1
+docker node update --label-add nodetype=datanodes vm2
+docker node update --label-add nodetype=datenodes vm3
+docker service create --network hadoopnetwork -e "HDFS_CONF_dfs_namenode_name_dir=/hadoop-data" --mount type=bind,source=/vagrant/namenode,target=/hadoop-data --name namenode --hostname namenodehost -e "HDFS_CONF_dfs_namenode_rpc___address=namenodehost:8020" -e "HDFS_CONF_dfs_namenode_servicerpc___address=namenodehost:8040" -e CLUSTER_NAME=hadoopcluster -e "CORE_CONF_fs_defaultFS=hdfs://namenodehost:8020" -e "HDFS_CONF_dfs_namenode_datanode_registration_ip___hostname___check=false" --replicas 1 --constraint node.labels.nodetype==namenode -p 8020:8020 -p 9870:9870 bde2020/hadoop-namenode:latest
+cd /vagrant
+./startdatanode.sh
