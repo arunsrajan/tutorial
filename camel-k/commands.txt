@@ -1,0 +1,27 @@
+camel-k prerequisite
+--------------------
+minikube
+kubectl
+helm
+kamel
+
+camel-k installation
+-------------------
+minikube start -p camelkubernetes --cpus 6 --memory 4096m --mount=true --mount-string=C:\DEVELOPMENT\camelkubernetes:/minikube-host
+minikube addons enable registry -p camelkubernetes
+export REGISTRY_ADDRESS=$(kubectl -n kube-system get service registry -o jsonpath='{.spec.clusterIP}')
+helm repo add camel-k https://apache.github.io/camel-k/charts/
+kubectl create namespace camel-basic
+kubectl config set-context --current --namespace=camel-basic
+helm install camel-k camel-k/camel-k --force --set platform.build.registry.address="10.111.160.67"
+kamel run MyRouting.java --dev --name myrouting
+kubectl port-forward --address 0.0.0.0 svc/myrouting 8080:80
+
+
+BasicFileTransfer commands
+---------------------------
+kubectl config set-context --current --namespace=camel-basic
+kubectl create configmap basicfiletransfer  --from-file=basicfiletransfer.properties
+kubectl apply -f camel-basic-pvc.yaml
+kubectl delete -n camel-basic integrationkits.camel.apache.org --all
+kamel run BasicFileTransfer.java -v camel-basic-pvc1:/folder1 -v camel-basic-pvc2:/folder2 --config=configmap:basicfiletransfer --dev --name basicfiletransfer

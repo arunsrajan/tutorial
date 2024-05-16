@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: camel-basic-pv1
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /minikube-host/data1
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: camel-basic-pv2
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /minikube-host/data2
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: camel-basic-pvc1
+  namespace: camel-basic
+spec:
+  storageClassName: standard
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 2Gi
+  volumeName: camel-basic-pv1
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: camel-basic-pvc2
+  namespace: camel-basic
+spec:
+  storageClassName: standard
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 2Gi
+  volumeName: camel-basic-pv2
