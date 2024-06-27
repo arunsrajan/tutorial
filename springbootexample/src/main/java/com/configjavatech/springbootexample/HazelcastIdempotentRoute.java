@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.core.HazelcastInstance;
 
-@Component
+//@Component
 public class HazelcastIdempotentRoute extends RouteBuilder {
 	@Bean("cf1")
 	@Scope("singleton")

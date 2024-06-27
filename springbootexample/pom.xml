@@ -98,6 +98,27 @@
 			<groupId>org.apache.camel.springboot</groupId>
 			<artifactId>camel-pdf-starter</artifactId>
 		</dependency>
+		
+		<dependency>
+			<groupId>org.apache.camel.springboot</groupId>
+			<artifactId>camel-swagger-java-starter</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.camel.springboot</groupId>
+			<artifactId>camel-jackson-starter</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.camel.springboot</groupId>
+			<artifactId>camel-rest-starter</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.camel.springboot</groupId>
+			<artifactId>camel-servlet-starter</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.camel.springboot</groupId>
+			<artifactId>camel-http-starter</artifactId>
+		</dependency>
 		<!-- Apache Artemis JMS client -->
 		<dependency>
 		    <groupId>org.apache.activemq</groupId>
@@ -125,7 +146,10 @@
 			<groupId>org.apache.camel.springboot</groupId>
 			<artifactId>camel-velocity-starter</artifactId>
 		</dependency>
-
+		<dependency>
+		    <groupId>org.apache.camel.springboot</groupId>
+		    <artifactId>camel-resilience4j-starter</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>io.hawt</groupId>
 			<artifactId>
