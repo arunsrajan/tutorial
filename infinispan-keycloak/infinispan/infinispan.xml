@@ -1,0 +1,91 @@
+<infinispan
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="urn:infinispan:config:15.0 https://infinispan.org/schemas/infinispan-config-15.0.xsd
+                            urn:infinispan:server:15.0 https://infinispan.org/schemas/infinispan-server-15.0.xsd"
+      xmlns="urn:infinispan:config:15.0"
+      xmlns:server="urn:infinispan:server:15.0">
+	<jgroups>
+        <stack-file name="jgroups" path="./udp.xml"/>
+    </jgroups>
+   <cache-container name="remoteKeycloak" statistics="true">
+       <transport lock-timeout="60000" stack="jgroups" cluster="cluster1" site="infini-site-1"/>
+        <serialization marshaller="org.infinispan.jboss.marshalling.commons.GenericJBossMarshaller">
+            <allow-list>
+                <class>org.keycloak.cluster.infinispan.WrapperClusterEvent</class>
+                <regex>.*</regex>
+            </allow-list>
+        </serialization>
+		<replicated-cache name="work">
+			<encoding media-type="application/x-jboss-marshalling"/>
+		</replicated-cache>
+    
+		<distributed-cache name="sessions">
+			<encoding media-type="application/x-jboss-marshalling"/>
+		</distributed-cache>
+		
+		<distributed-cache name="authenticationSessions">
+			<encoding media-type="application/x-jboss-marshalling"/>
+		</distributed-cache>
+		
+		<distributed-cache name="clientSessions">
+			<encoding media-type="application/x-jboss-marshalling"/>
+		</distributed-cache>
+		
+		<distributed-cache name="offlineSessions">
+			<encoding media-type="application/x-jboss-marshalling"/>
+		</distributed-cache>
+		
+		<distributed-cache name="offlineClientSessions">
+			<encoding media-type="application/x-jboss-marshalling"/>
+		</distributed-cache>
+		
+		<distributed-cache name="actionTokens">
+			<encoding media-type="application/x-jboss-marshalling"/>
+		</distributed-cache>
+		
+		<distributed-cache name="loginFailures">
+			<encoding media-type="application/x-jboss-marshalling"/>
+		</distributed-cache>
+   </cache-container>
+
+
+   <server xmlns="urn:infinispan:server:15.0">
+      <interfaces>
+         <interface name="public">
+            <inet-address value="${infinispan.bind.address:127.0.0.1}"/>
+         </interface>
+      </interfaces>
+
+      <socket-bindings default-interface="public" port-offset="${infinispan.socket.binding.port-offset:0}">
+         <socket-binding name="default" port="${infinispan.bind.port:11222}"/>
+      </socket-bindings>
+
+      <security>
+         <security-realms>
+            <security-realm name="default">
+               <!-- Uncomment to enable TLS on the realm -->
+               <!-- server-identities>
+                  <ssl>
+                     <keystore path="server.pfx"
+                               password="password" alias="server"
+                               generate-self-signed-certificate-host="localhost"/>
+                  </ssl>
+               </server-identities-->
+               <properties-realm/>
+            </security-realm>
+         </security-realms>
+      </security>
+
+       <endpoints socket-binding="default" security-realm="default">
+    <endpoint>
+      <hotrod-connector name="hotrod">
+        <authentication>
+          <sasl mechanisms="DIGEST-MD5"
+                server-name="infinispan" />
+        </authentication>
+      </hotrod-connector>
+      <rest-connector name="rest"/>
+    </endpoint>
+  </endpoints>
+   </server>
+</infinispan>
