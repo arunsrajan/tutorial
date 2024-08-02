@@ -1,0 +1,13 @@
+fernetKey: RFNJTHBRV0h4bTJmVlpKaExTb1F3OTNjc2M3Nk9EYUc=
+webserverSecretKey: OVlNbkNkTXdtR3RuRHF6clJ1b0dBOEF2cGt5cGtvcUc=
+executor: "KubernetesExecutor"
+
+dags:
+  gitSync:
+    enabled: true
+    repo: https://github.com/arunsrajan/tutorial.git
+    branch: main
+    rev: HEAD
+    depth: 1
+    maxFailures: 0
+    subPath: "airflow/dags"
