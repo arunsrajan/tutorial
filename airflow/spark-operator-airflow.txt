@@ -1,0 +1,70 @@
+1. spark operator installation
+----------------------------
+kubectl create namespace spark-operator
+kubectl create namespace spark-jobs
+helm repo add spark-operator https://googlecloudplatform.github.io/spark-on-k8s-operator
+helm repo update
+helm install spark-operator spark-operator/spark-operator --namespace spark-operator --set webhook.enable=true --set sparkJobNamespace=spark-jobs
+
+2. Role Based Access Control For Spark Job Pods (Driver and Executor) created
+-----------------------------------------------------------------
+kubectl create serviceaccount spark -n spark-jobs
+kubectl create clusterrolebinding spark-role --clusterrole=admin --serviceaccount=spark-jobs:spark --namespace=spark-jobs
+kubectl create clusterrolebinding spark-jobs-role-binding --clusterrole=spark-operator --serviceaccount=spark-jobs:spark --namespace=spark-jobs
+
+
+3. To start kubernetes cluster. If you already have kubernetes cluster skip this step
+----------------------------------------------------------------------------------
+Allocate cpus and memory if you have more cpus and memory
+
+minikube start -p airflow --cpus 12 --memory 12g --mount=true --mount-string=C:\DEVELOPMENT\airflow:/airflow
+
+
+4. Airflow Operator installation
+-----------------------------
+helm repo add apache-airflow https://airflow.apache.org
+helm repo update
+helm upgrade --install airflow apache-airflow/airflow --namespace airflow
+
+5. To access airflow server
+------------------------
+kubectl port-forward --address 0.0.0.0 svc/airflow-webserver -n airflow 8080:8080
+
+6. You can replace the airflow scheduler pod name from the kubernetes cluster 
+---------------------------------------------------------------------------
+copy the spark examples i have attached to the airflow scheduler pod
+
+kubectl cp spark-examples.yml airflow-scheduler-58d6754f68-pdnd5:/opt/airflow/dags -c scheduler -n airflow
+kubectl cp spark-pi.py airflow-scheduler-58d6754f68-pdnd5:/opt/airflow/dags -c scheduler -n airflow
+
+7. You can replace the airflow webserver pod name from the kubernetes cluster 
+---------------------------------------------------------------------------
+copy the spark examples i have attached to the airflow webserver pod
+
+kubectl cp spark-pi.py airflow-webserver-6dd8fc4b9b-m7vrx:/opt/airflow/dags -c webserver -n airflow
+kubectl cp spark-examples.yml airflow-webserver-6dd8fc4b9b-m7vrx:/opt/airflow/dags -c webserver -n airflow
+
+8. You can replace the airflow worker pod name from the kubernetes cluster 
+---------------------------------------------------------------------------
+copy the spark examples i have attached to the airflow worker pod
+
+kubectl cp spark-pi.py airflow-worker-0:/opt/airflow/dags -c worker -n airflow
+kubectl cp spark-examples.yml airflow-worker-0:/opt/airflow/dags -c worker -n airflow
+
+
+9. Create the RBAC (Role Based Access Control) for airflow scheduler, worker and webserver
+----------------------------------------------------------------------------------------
+kubectl create clusterrolebinding spark-airflow-role --clusterrole=admin --serviceaccount=airflow:airflow-scheduler --namespace=airflow
+kubectl create clusterrolebinding spark-airflow-role-binding --clusterrole=spark-operator --serviceaccount=airflow:airflow-scheduler --namespace=airflow
+kubectl create clusterrolebinding spark-airflow-worker-role --clusterrole=admin --serviceaccount=airflow:airflow-worker --namespace=airflow
+kubectl create clusterrolebinding spark-airflow-worker-role-binding --clusterrole=spark-operator --serviceaccount=airflow:airflow-worker --namespace=airflow
+kubectl create clusterrolebinding spark-airflow-webserver-role --clusterrole=admin --serviceaccount=airflow:airflow-webserver --namespace=airflow
+kubectl create clusterrolebinding spark-airflow-webserver-role-binding --clusterrole=spark-operator --serviceaccount=airflow:airflow-webserver --namespace=airflow
+
+10. Perform this in Airflow webserver pod
+-------------------------------------
+airflow dags reserialize
+
+11. Execute this in Airflow worker, scheduler and webserver to test whether the airflow setup is working properly
+-----------------------------------------------------------------------------------------------------------------
+airflow tasks test spark_kubernetes_example spark_pi 2024-07-12
