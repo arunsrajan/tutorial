@@ -65,6 +65,8 @@ kubectl create clusterrolebinding spark-airflow-webserver-role-binding --cluster
 -------------------------------------
 airflow dags reserialize
 
-11. Execute this in Airflow worker, scheduler and webserver to test whether the airflow setup is working properly
+11. Configure connectid as k8s in kubernetes Cluster Connection as per the python file kubernetes_conn_id
+
+12. Execute this in Airflow worker, scheduler and webserver to test whether the airflow setup is working properly
 -----------------------------------------------------------------------------------------------------------------
 airflow tasks test spark_kubernetes_example spark_pi 2024-07-12
