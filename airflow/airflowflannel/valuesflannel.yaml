@@ -1,0 +1,26 @@
+fernetKey: c241b3BKT0lPa2FkNXowak1WSE5IZm1KNWVwbXNoNFo=
+webserverSecretKey: WDRVdm1wbnNHWVdneDU1NFJ6M2VDdGhGZVowTHl1a2w=
+logs:
+  emptyDirConfig:
+    sizeLimit: 1Gi
+    medium: Memory
+  persistence:
+    enabled: true
+    size: 1Gi
+    existingClaim: logs-airflow-worker-0
+volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: data-airflow-postgresql-0    
+volumeMounts:
+    - name: data
+      mountPath: /bitnami/postgresql
+dags:
+  gitSync:
+    enabled: true
+    repo: https://github.com/arunsrajan/tutorial.git
+    branch: main
+    rev: HEAD
+    depth: 1
+    maxFailures: 0
+    subPath: "airflow/dags"
