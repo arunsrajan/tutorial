@@ -1,4 +1,4 @@
->minikube start -p minio --cpus 12 --memory 12g --mount=true --mount-string=C:\DEVELOPMENT\minio:/minio --subnet=192.168.89.0/24
+minikube start -p minio --cpus 12 --memory 12g --mount=true --mount-string=C:\DEVELOPMENT\minio:/minio --subnet=192.168.89.0/24
 Operator Hub Installation
 --------------------------
 
