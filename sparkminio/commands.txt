@@ -28,7 +28,7 @@ Tenant
 ------
 curl -sLo values.yaml https://raw.githubusercontent.com/minio/operator/master/helm/tenant/values.yaml
 
-helm upgrade --install --namespace minio-tenant --create-namespace --values values.yaml minio minio-operator/tenant
+helm upgrade --install --namespace minio-tenant --create-namespace --values miniovalues.yaml minio minio-operator/tenant
 
 helm delete --namespace minio-tenant minio minio-operator/tenant
 
