@@ -1,0 +1,73 @@
+>minikube start -p minio --cpus 12 --memory 12g --mount=true --mount-string=C:\DEVELOPMENT\minio:/minio --subnet=192.168.89.0/24
+Operator Hub Installation
+--------------------------
+
+kubectl create -f https://raw.githubusercontent.com/operator-framework/operator-lifecycle-manager/master/deploy/upstream/quickstart/crds.yaml
+kubectl create -f https://raw.githubusercontent.com/operator-framework/operator-lifecycle-manager/master/deploy/upstream/quickstart/olm.yaml
+minio installation
+-------------------
+kubectl create -f https://operatorhub.io/install/minio-operator.yaml
+
+
+Operator Hub helm
+------------------
+helm repo add minio-operator https://operator.min.io
+helm search repo minio-operator
+
+helm install --namespace minio-operator --create-namespace minio-operator minio-operator/operator
+
+Go To Minio Operator Pod
+------------------------
+cat /var/run/secrets/kubernetes.io/serviceaccount/token
+Token: eyJhbGciOiJSUzI1NiIsImtpZCI6InVwUkFsRS1wMEplQ2lrX21fUWpLUzFsbGJfeXRUVkoxaVFjaG9UN1JnTmMifQ.eyJhdWQiOlsiaHR0cHM6Ly9rdWJlcm5ldGVzLmRlZmF1bHQuc3ZjLmNsdXN0ZXIubG9jYWwiXSwiZXhwIjoxNzU0NzM5MTM2LCJpYXQiOjE3MjMyMDMxMzYsImlzcyI6Imh0dHBzOi8va3ViZXJuZXRlcy5kZWZhdWx0LnN2Yy5jbHVzdGVyLmxvY2FsIiwia3ViZXJuZXRlcy5pbyI6eyJuYW1lc3BhY2UiOiJvcGVyYXRvcnMiLCJwb2QiOnsibmFtZSI6Im1pbmlvLW9wZXJhdG9yLTc0NmQ1YmM2ODktMmx4eHoiLCJ1aWQiOiI2MzFjOTE4OC1kZWEwLTRjMGQtYjRiOC1hODc1OGFhYTNiNTkifSwic2VydmljZWFjY291bnQiOnsibmFtZSI6Im1pbmlvLW9wZXJhdG9yIiwidWlkIjoiZGQ1Y2ZlMDAtOTlmMy00ZmYzLWJmODYtMDZlYmRhMzAzN2ViIn0sIndhcm5hZnRlciI6MTcyMzIwNjc0M30sIm5iZiI6MTcyMzIwMzEzNiwic3ViIjoic3lzdGVtOnNlcnZpY2VhY2NvdW50Om9wZXJhdG9yczptaW5pby1vcGVyYXRvciJ9.Rk8rBcT0a2pBJQTyE20pmoGw9FAjDjQypbPXnkQeWkjqCoaDpvJPJaWjGLXrxZMKgdfwhfa-MsbM1BoZfOc5oZrGkYQRftdU9ugkdZlEqtk4nSRYMOMy_LMZSjk_xaSgyIN5a5d3H1kGCw1gF5BMRVdwE0Ng7TCjrPExLlSpz-PmV1czd1bC6GqG8Fyl_wgEIPPCpV4vgtILqkRwkfuqln7Lox6TCHRVSJFscpyvhQerxpgm2MwAuCg6EK2BHGbJuu0D7-IismnSKSxzX2Bu2pKtaKbQaZHVbERmAyeDq1ZonoTOkh2qqIlUaOLpRGHcNM1oFTnLkH751P_3nm6SSg
+kubectl port-forward svc/console -n operators 9091:9090
+
+kubectl create namespace minio-tenant
+
+Tenant
+------
+curl -sLo values.yaml https://raw.githubusercontent.com/minio/operator/master/helm/tenant/values.yaml
+
+helm upgrade --install --namespace minio-tenant --create-namespace --values values.yaml minio minio-operator/tenant
+
+helm delete --namespace minio-tenant minio minio-operator/tenant
+
+
+kubectl port-forward svc/myminio-console -n minio-tenant 9443:9443
+kubectl port-forward svc/myminio-hl -n minio-tenant 9000:9000
+
+minio
+minio123
+
+access key: xRUhzzp30azdYcB3RC1Z
+
+access secret : iVfmUyeQzgQ2yugaiYT3pKg5FSKiz17pRFqdzsIj
+
+
+
+aws s3 ls --region us-east-1 --endpoint https://127.0.0.1:9443 s3://test/ --no-verify-ssl
+
+
+In Code
+keytool -import -file public.crt -alias minio -keystore truststore.jks -storepass admin12345$
+
+
+(AWS_ACCESS_KEY_ID (or AWS_ACCESS_KEY) and AWS_SECRET_KEY (or AWS_SECRET_ACCESS_KEY))
+
+
+set AWS_ACCESS_KEY=xRUhzzp30azdYcB3RC1Z
+set AWS_SECRET_ACCESS_KEY=iVfmUyeQzgQ2yugaiYT3pKg5FSKiz17pRFqdzsIj
+set AWS_ACCESS_KEY_ID=xRUhzzp30azdYcB3RC1Z
+set AWS_SECRET_KEY=iVfmUyeQzgQ2yugaiYT3pKg5FSKiz17pRFqdzsIj
+
+Running Spark Kubernetes minio s3 bucket
+----------------------------------------
+kubectl create serviceaccount spark
+kubectl create clusterrolebinding spark-role --clusterrole=edit --serviceaccount=default:spark --namespace=default
+spark-submit.cmd --deploy-mode cluster --conf spark.kubernetes.authenticate.driver.serviceAccountName=spark --conf spark.kubernetes.container.image.pullPolicy=Always --conf spark.hadoop.fs.s3a.path.style.access=True --conf spark.hadoop.fs.s3a.access.key=xRUhzzp30azdYcB3RC1Z --conf spark.hadoop.fs.s3a.impl=org.apache.hadoop.fs.s3a.S3AFileSystem --conf spark.hadoop.fs.s3a.secret.key=iVfmUyeQzgQ2yugaiYT3pKg5FSKiz17pRFqdzsIj --conf spark.hadoop.fs.s3a.path.style.access=True --conf spark.hadoop.fs.s3a.connection.ssl.enabled=False --conf spark.hadoop.fs.s3a.endpoint=http://minio-hl.minio-tenant:9000 --conf spark.kubernetes.container.image=arunsrajan/spark:3.5.1 --conf spark.master=k8s://https://127.0.0.1:56484 local:///app/main.py
+
+
+
+
+docker build -t arunsrajan/spark:3.5.1 .
+docker push arunsrajan/spark:3.5.1
