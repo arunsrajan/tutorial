@@ -1,0 +1,7 @@
+minikube start -p artemis --cpus 3 --memory 3g --mount=true --mount-string=C:\DEVELOPMENT\artemis\artemis:/artemis --nodes=3
+
+
+
+docker build -t arunsrajan/activemq-artemis:2.37.0 .
+docker push arunsrajan/activemq-artemis:2.37.0
+docker run --name artemisbroker -p 8161:8161 -p 61616:61616 -d arunsrajan/activemq-artemis:2.37.0
