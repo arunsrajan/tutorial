@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: artemis-pv1
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /artemis/broker1
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: artemis-pv2
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /artemis/broker2
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: artemis-pvc1
+  namespace: default
+spec:
+  storageClassName: standard
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 2Gi
+  volumeName: artemis-pv1
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: artemis-pvc2
+  namespace: default
+spec:
+  storageClassName: standard
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 2Gi
+  volumeName: artemis-pv2
