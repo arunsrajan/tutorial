@@ -1,0 +1,67 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaConnect
+metadata:
+  name: my-connect
+  namespace: kafka
+  annotations:
+    strimzi.io/use-connector-resources: "true"
+spec:
+  bootstrapServers: kafka-cluster-2-kafka-bootstrap.kafka:9092
+  version: 3.7.0
+  replicas: 1
+  image: arunsrajan/strimzi-kafka-connect:3.7-latest
+  # build:
+    # output:
+       # type: docker
+       # image: quay.io/strimzi/kafka:0.43.0-kafka-3.7.0
+    # plugins:
+      # - name: file-plugin
+        # artifacts:
+          # - type: maven
+            # repository: https://repo1.maven.org/maven2
+            # group: org.apache.kafka
+            # artifact: connect-file
+            # version: 3.7.0
+  config:
+    group.id: my-connect-cluster
+    offset.storage.topic: my-connect-cluster-offsets
+    config.storage.topic: my-connect-cluster-configs
+    status.storage.topic: my-connect-cluster-status
+    key.converter: org.apache.kafka.connect.storage.StringConverter
+    value.converter: org.apache.kafka.connect.storage.StringConverter
+    #key.converter: org.apache.kafka.connect.json.JsonConverter
+    #value.converter: org.apache.kafka.connect.json.JsonConverter
+    key.converter.schemas.enable: true
+    value.converter.schemas.enable: true
+    config.storage.replication.factor: 3
+    offset.storage.replication.factor: 3
+    status.storage.replication.factor: 3
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaConnector
+metadata:
+  name: file-source
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: my-connect
+spec:
+  class: org.apache.kafka.connect.file.FileStreamSourceConnector
+  tasksMax: 1
+  config:
+    file: "/opt/kafka/LICENSE"
+    topic: kafka2
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaConnector
+metadata:
+  name: file-sink
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: my-connect
+spec:
+  class: org.apache.kafka.connect.file.FileStreamSinkConnector
+  tasksMax: 1
+  config:
+    file: /tmp/output.txt
+    topics: kafka2
+

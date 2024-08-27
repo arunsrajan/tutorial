@@ -1,0 +1,149 @@
+minikube start -p strimzi --cpus 11 --memory 12g --mount=true --mount-string=C:\DEVELOPMENT\kafkastrimzi:/strimzi --driver docker
+
+
+steps for deploying the strimzi operator
+--------------------------------------------------------------------------------------------------------------------
+
+kubectl create namespace kafka
+kubectl create -f "https://strimzi.io/install/latest?namespace=kafka" -n kafka
+
+To Start Kafka Cluster
+---------------------------------------------------------------------------------------------------------------------
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaNodePool
+metadata:
+  name: kafka-cluster-2-node-pool
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: kafka-cluster-2
+spec:
+  replicas: 3
+  roles:
+    - broker
+    - controller
+  storage:
+    type: ephemeral
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: Kafka
+metadata:
+  name: kafka-cluster-2
+  namespace: kafka
+  annotations:
+    strimzi.io/node-pools: enabled
+    strimzi.io/kraft: enabled
+spec:
+  kafka:
+    version: 3.7.0
+    metadataVersion: 3.7-IV4
+    listeners:
+      - name: plain
+        port: 9092
+        type: internal
+        tls: false
+      - name: tls
+        port: 9093
+        type: internal
+        tls: true
+      - name: external
+        port: 9199
+        type: nodeport
+        tls: false
+    config:
+      offsets.topic.replication.factor: 3
+      transaction.state.log.replication.factor: 3
+      transaction.state.log.min.isr: 2
+      default.replication.factor: 3
+      min.insync.replicas: 2
+  entityOperator:
+    topicOperator: {}
+    userOperator: {}
+
+
+Building Kafka Connect With Plugins
+------------------------------------------------------------------------------------------------------------------------
+Dockerfile
+----------
+FROM quay.io/strimzi/kafka:0.43.0-kafka-3.7.0
+USER root
+# Add additional plugins or configurations here
+COPY connectors/*.jar /usr/share/java
+COPY connectors/*.jar /opt/kafka/plugins
+
+To Build KafkaConnect with Plugins
+----------------------------------
+docker build -t arunsrajan/strimzi-kafka-connect:3.7-latest .
+docker push arunsrajan/strimzi-kafka-connect:3.7-latest
+
+
+
+To Start Kafka Connect with Connectors
+--------------------------------------
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaConnect
+metadata:
+  name: my-connect
+  namespace: kafka
+  annotations:
+    strimzi.io/use-connector-resources: "true"
+spec:
+  bootstrapServers: kafka-cluster-2-kafka-bootstrap.kafka:9092
+  version: 3.7.0
+  replicas: 1
+  image: arunsrajan/strimzi-kafka-connect:3.7-latest
+  # build:
+    # output:
+       # type: docker
+       # image: quay.io/strimzi/kafka:0.43.0-kafka-3.7.0
+    # plugins:
+      # - name: file-plugin
+        # artifacts:
+          # - type: maven
+            # repository: https://repo1.maven.org/maven2
+            # group: org.apache.kafka
+            # artifact: connect-file
+            # version: 3.7.0
+  config:
+    group.id: my-connect-cluster
+    offset.storage.topic: my-connect-cluster-offsets
+    config.storage.topic: my-connect-cluster-configs
+    status.storage.topic: my-connect-cluster-status
+    key.converter: org.apache.kafka.connect.storage.StringConverter
+    value.converter: org.apache.kafka.connect.storage.StringConverter
+    #key.converter: org.apache.kafka.connect.json.JsonConverter
+    #value.converter: org.apache.kafka.connect.json.JsonConverter
+    key.converter.schemas.enable: true
+    value.converter.schemas.enable: true
+    config.storage.replication.factor: 3
+    offset.storage.replication.factor: 3
+    status.storage.replication.factor: 3
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaConnector
+metadata:
+  name: file-source
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: my-connect
+spec:
+  class: org.apache.kafka.connect.file.FileStreamSourceConnector
+  tasksMax: 1
+  config:
+    file: "/opt/kafka/LICENSE"
+    topic: kafka2
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaConnector
+metadata:
+  name: file-sink
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: my-connect
+spec:
+  class: org.apache.kafka.connect.file.FileStreamSinkConnector
+  tasksMax: 1
+  config:
+    file: /tmp/output.txt
+    topics: kafka2
+
+
