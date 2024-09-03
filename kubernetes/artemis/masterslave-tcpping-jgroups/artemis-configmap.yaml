@@ -1,0 +1,851 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: artemis-master-config
+data:
+  artemismaster.xml: |
+    <?xml version='1.0'?>
+    <!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+    -->
+
+    <configuration xmlns="urn:activemq"
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xmlns:xi="http://www.w3.org/2001/XInclude"
+               xsi:schemaLocation="urn:activemq /schema/artemis-configuration.xsd">
+
+    <core xmlns="urn:activemq:core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="urn:activemq:core ">
+
+      <name>artemisprimary</name>
+
+
+      <persistence-enabled>true</persistence-enabled>
+
+      <!-- It is recommended to keep this value as 1, maximizing the number of records stored about redeliveries.
+           However if you must preserve state of individual redeliveries, you may increase this value or set it to -1 (infinite). -->
+      <max-redelivery-records>1</max-redelivery-records>
+
+      <!-- this could be ASYNCIO, MAPPED, NIO
+           ASYNCIO: Linux Libaio
+           MAPPED: mmap files
+           NIO: Plain Java Files
+       -->
+      <journal-type>NIO</journal-type>
+
+      <paging-directory>data/paging</paging-directory>
+
+      <bindings-directory>data/bindings</bindings-directory>
+
+      <journal-directory>data/journal</journal-directory>
+
+      <large-messages-directory>data/large-messages</large-messages-directory>
+
+      
+      <!-- if you want to retain your journal uncomment this following configuration.
+
+      This will allow your system to keep 7 days of your data, up to 10G. Tweak it accordingly to your use case and capacity.
+
+      it is recommended to use a separate storage unit from the journal for performance considerations.
+
+      <journal-retention-directory period="7" unit="DAYS" storage-limit="10G">data/retention</journal-retention-directory>
+
+      You can also enable retention by using the argument journal-retention on the `artemis create` command -->
+
+
+
+      <journal-datasync>true</journal-datasync>
+
+      <journal-min-files>2</journal-min-files>
+
+      <journal-pool-files>10</journal-pool-files>
+
+      <journal-device-block-size>4096</journal-device-block-size>
+
+      <journal-file-size>10M</journal-file-size>
+            <!--
+        You can verify the network health of a particular NIC by specifying the <network-check-NIC> element.
+         <network-check-NIC>theNicName</network-check-NIC>
+        -->
+
+      <!--
+        Use this to use an HTTP server to validate the network
+         <network-check-URL-list>http://www.apache.org</network-check-URL-list> -->
+
+      <!-- <network-check-period>10000</network-check-period> -->
+      <!-- <network-check-timeout>1000</network-check-timeout> -->
+
+      <!-- this is a comma separated list, no spaces, just DNS or IPs
+           it should accept IPV6
+
+           Warning: Make sure you understand your network topology as this is meant to validate if your network is valid.
+                    Using IPs that could eventually disappear or be partially visible may defeat the purpose.
+                    You can use a list of multiple IPs, and if any successful ping will make the server OK to continue running -->
+      <!-- <network-check-list>10.0.0.1</network-check-list> -->
+
+      <!-- use this to customize the ping used for ipv4 addresses -->
+      <!-- <network-check-ping-command>ping -c 1 -t %d %s</network-check-ping-command> -->
+
+      <!-- use this to customize the ping used for ipv6 addresses -->
+      <!-- <network-check-ping6-command>ping6 -c 1 %2$s</network-check-ping6-command> -->
+
+
+
+    <connectors>
+        <!-- Connector used to be announced through cluster connections and notifications -->
+        <connector name="artemis">tcp://artemismaster:61616</connector>
+    </connectors>
+
+
+
+      <!-- how often we are looking for how many bytes are being used on the disk in ms -->
+      <disk-scan-period>5000</disk-scan-period>
+
+      <!-- once the disk hits this limit the system will block, or close the connection in certain protocols
+           that won't support flow control. -->
+      <max-disk-usage>90</max-disk-usage>
+
+      <!-- should the broker detect dead locks and other issues -->
+      <critical-analyzer>true</critical-analyzer>
+
+      <critical-analyzer-timeout>120000</critical-analyzer-timeout>
+
+      <critical-analyzer-check-period>60000</critical-analyzer-check-period>
+
+      <critical-analyzer-policy>HALT</critical-analyzer-policy>
+
+      
+
+      <!-- the system will enter into page mode once you hit this limit. This is an estimate in bytes of how much the messages are using in memory
+
+      The system will use half of the available memory (-Xmx) by default for the global-max-size.
+      You may specify a different value here if you need to customize it to your needs.
+
+      <global-max-size>100Mb</global-max-size> -->
+
+      <!-- the maximum number of messages accepted before entering full address mode.
+           if global-max-size is specified the full address mode will be specified by whatever hits it first. -->
+      <global-max-messages>-1</global-max-messages>
+
+      <acceptors>
+
+         <!-- useEpoll means: it will use Netty epoll if you are on a system (Linux) that supports it -->
+         <!-- amqpCredits: The number of credits sent to AMQP producers -->
+         <!-- amqpLowCredits: The server will send the # credits specified at amqpCredits at this low mark -->
+         <!-- amqpDuplicateDetection: If you are not using duplicate detection, set this to false
+                                      as duplicate detection requires applicationProperties to be parsed on the server. -->
+         <!-- amqpMinLargeMessageSize: Determines how many bytes are considered large, so we start using files to hold their data.
+                                       default: 102400, -1 would mean to disable large message control -->
+
+         <!-- Note: If an acceptor needs to be compatible with HornetQ and/or Artemis 1.x clients add
+                    "anycastPrefix=jms.queue.;multicastPrefix=jms.topic." to the acceptor url.
+                    See https://issues.apache.org/jira/browse/ARTEMIS-1644 for more information. -->
+
+
+         <!-- Acceptor for every supported protocol -->
+         <acceptor name="artemis">tcp://0.0.0.0:61616?tcpSendBufferSize=1048576;tcpReceiveBufferSize=1048576;amqpMinLargeMessageSize=102400;protocols=CORE,AMQP,STOMP,HORNETQ,MQTT,OPENWIRE;useEpoll=true;amqpCredits=1000;amqpLowCredits=300;amqpDuplicateDetection=true;supportAdvisory=false;suppressInternalManagementObjects=false</acceptor>
+
+         <!-- AMQP Acceptor.  Listens on default AMQP port for AMQP traffic.-->
+         <acceptor name="amqp">tcp://0.0.0.0:5672?tcpSendBufferSize=1048576;tcpReceiveBufferSize=1048576;protocols=AMQP;useEpoll=true;amqpCredits=1000;amqpLowCredits=300;amqpMinLargeMessageSize=102400;amqpDuplicateDetection=true</acceptor>
+
+         <!-- STOMP Acceptor. -->
+         <acceptor name="stomp">tcp://0.0.0.0:61613?tcpSendBufferSize=1048576;tcpReceiveBufferSize=1048576;protocols=STOMP;useEpoll=true</acceptor>
+
+         <!-- HornetQ Compatibility Acceptor.  Enables HornetQ Core and STOMP for legacy HornetQ clients. -->
+         <acceptor name="hornetq">tcp://0.0.0.0:5445?anycastPrefix=jms.queue.;multicastPrefix=jms.topic.;protocols=HORNETQ,STOMP;useEpoll=true</acceptor>
+
+         <!-- MQTT Acceptor -->
+         <acceptor name="mqtt">tcp://0.0.0.0:1883?tcpSendBufferSize=1048576;tcpReceiveBufferSize=1048576;protocols=MQTT;useEpoll=true</acceptor>
+
+      </acceptors>
+
+
+      <cluster-user>admin</cluster-user>
+
+      <cluster-password>admin</cluster-password>
+
+      <broadcast-groups>
+         <broadcast-group name="bg-group1">
+           <jgroups-file>jgroups.xml</jgroups-file>
+            <jgroups-channel>activemq_broadcast_channel</jgroups-channel>
+            <connector-ref>artemis</connector-ref>
+         </broadcast-group>
+      </broadcast-groups>
+
+      <discovery-groups>
+         <discovery-group name="dg-group1">
+            <jgroups-file>jgroups.xml</jgroups-file>
+            <jgroups-channel>activemq_broadcast_channel</jgroups-channel>
+            <refresh-timeout>10000</refresh-timeout>
+         </discovery-group>
+      </discovery-groups>
+
+      <cluster-connections>
+         <cluster-connection name="my-cluster">
+            <connector-ref>artemis</connector-ref>
+            <message-load-balancing>ON_DEMAND</message-load-balancing>
+            <max-hops>0</max-hops>
+            <discovery-group-ref discovery-group-name="dg-group1"/>
+         </cluster-connection>
+      </cluster-connections>
+
+
+      <ha-policy>
+         <replication>
+            <primary>
+                <check-for-active-server>true</check-for-active-server>
+               <vote-on-replication-failure>true</vote-on-replication-failure>
+            </primary>
+         </replication>
+      </ha-policy>
+
+      <security-settings>
+         <security-setting match="#">
+            <permission type="createNonDurableQueue" roles="amq"/>
+            <permission type="deleteNonDurableQueue" roles="amq"/>
+            <permission type="createDurableQueue" roles="amq"/>
+            <permission type="deleteDurableQueue" roles="amq"/>
+            <permission type="createAddress" roles="amq"/>
+            <permission type="deleteAddress" roles="amq"/>
+            <permission type="consume" roles="amq"/>
+            <permission type="browse" roles="amq"/>
+            <permission type="send" roles="amq"/>
+            <!-- we need this otherwise ./artemis data imp wouldn't work -->
+            <permission type="manage" roles="amq"/>
+         </security-setting>
+      </security-settings>
+
+      <address-settings>
+         <!-- if you define auto-create on certain queues, management has to be auto-create -->
+         <address-setting match="activemq.management#">
+            <dead-letter-address>DLQ</dead-letter-address>
+            <expiry-address>ExpiryQueue</expiry-address>
+            <redelivery-delay>0</redelivery-delay>
+            <!-- with -1 only the global-max-size is in use for limiting -->
+            <max-size-bytes>-1</max-size-bytes>
+            <message-counter-history-day-limit>10</message-counter-history-day-limit>
+            <address-full-policy>PAGE</address-full-policy>
+            <auto-create-queues>true</auto-create-queues>
+            <auto-create-addresses>true</auto-create-addresses>
+         </address-setting>
+         <!--default for catch all-->
+         <address-setting match="#">
+            <dead-letter-address>DLQ</dead-letter-address>
+            <expiry-address>ExpiryQueue</expiry-address>
+            <redelivery-delay>0</redelivery-delay>
+
+            <message-counter-history-day-limit>10</message-counter-history-day-limit>
+            <address-full-policy>PAGE</address-full-policy>
+            <auto-create-queues>true</auto-create-queues>
+            <auto-create-addresses>true</auto-create-addresses>
+            <auto-delete-queues>false</auto-delete-queues>
+            <auto-delete-addresses>false</auto-delete-addresses>
+
+            <!-- The size of each page file -->
+            <page-size-bytes>10M</page-size-bytes>
+
+            <!-- When we start applying the address-full-policy, e.g paging -->
+            <!-- Both are disabled by default, which means we will use the global-max-size/global-max-messages  -->
+            <max-size-bytes>-1</max-size-bytes>
+            <max-size-messages>-1</max-size-messages>
+
+            <!-- When we read from paging into queues (memory) -->
+
+            <max-read-page-messages>-1</max-read-page-messages>
+            <max-read-page-bytes>20M</max-read-page-bytes>
+
+            <!-- Limit on paging capacity before starting to throw errors -->
+
+            <page-limit-bytes>-1</page-limit-bytes>
+            <page-limit-messages>-1</page-limit-messages>
+          </address-setting>
+      </address-settings>
+
+      <addresses>
+         <address name="DLQ">
+            <anycast>
+               <queue name="DLQ" />
+            </anycast>
+         </address>
+         <address name="ExpiryQueue">
+            <anycast>
+               <queue name="ExpiryQueue" />
+            </anycast>
+         </address>
+
+      </addresses>
+
+
+      <!-- Uncomment the following if you want to use the Standard LoggingActiveMQServerPlugin pluging to log in events
+      <broker-plugins>
+         <broker-plugin class-name="org.apache.activemq.artemis.core.server.plugin.impl.LoggingActiveMQServerPlugin">
+            <property key="LOG_ALL_EVENTS" value="true"/>
+            <property key="LOG_CONNECTION_EVENTS" value="true"/>
+            <property key="LOG_SESSION_EVENTS" value="true"/>
+            <property key="LOG_CONSUMER_EVENTS" value="true"/>
+            <property key="LOG_DELIVERING_EVENTS" value="true"/>
+            <property key="LOG_SENDING_EVENTS" value="true"/>
+            <property key="LOG_INTERNAL_EVENTS" value="true"/>
+         </broker-plugin>
+      </broker-plugins>
+      -->
+
+    </core>
+    </configuration>
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: artemis-slave-config
+data:
+  artemisslave.xml: |
+    <?xml version='1.0'?>
+    <!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+    -->
+
+    <configuration xmlns="urn:activemq"
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xmlns:xi="http://www.w3.org/2001/XInclude"
+               xsi:schemaLocation="urn:activemq /schema/artemis-configuration.xsd">
+
+    <core xmlns="urn:activemq:core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="urn:activemq:core ">
+
+      <name>artemisbackup</name>
+
+
+      <persistence-enabled>true</persistence-enabled>
+
+      <!-- It is recommended to keep this value as 1, maximizing the number of records stored about redeliveries.
+           However if you must preserve state of individual redeliveries, you may increase this value or set it to -1 (infinite). -->
+      <max-redelivery-records>1</max-redelivery-records>
+
+      <!-- this could be ASYNCIO, MAPPED, NIO
+           ASYNCIO: Linux Libaio
+           MAPPED: mmap files
+           NIO: Plain Java Files
+       -->
+      <journal-type>NIO</journal-type>
+
+      <paging-directory>data/paging</paging-directory>
+
+      <bindings-directory>data/bindings</bindings-directory>
+
+      <journal-directory>data/journal</journal-directory>
+
+      <large-messages-directory>data/large-messages</large-messages-directory>
+
+      
+      <!-- if you want to retain your journal uncomment this following configuration.
+
+      This will allow your system to keep 7 days of your data, up to 10G. Tweak it accordingly to your use case and capacity.
+
+      it is recommended to use a separate storage unit from the journal for performance considerations.
+
+      <journal-retention-directory period="7" unit="DAYS" storage-limit="10G">data/retention</journal-retention-directory>
+
+      You can also enable retention by using the argument journal-retention on the `artemis create` command -->
+
+
+
+      <journal-datasync>true</journal-datasync>
+
+      <journal-min-files>2</journal-min-files>
+
+      <journal-pool-files>10</journal-pool-files>
+
+      <journal-device-block-size>4096</journal-device-block-size>
+
+      <journal-file-size>10M</journal-file-size>
+      
+      <!--
+       This value was determined through a calculation.
+       Your system could perform 0.36 writes per millisecond
+       on the current journal configuration.
+       That translates as a sync write every 2812000 nanoseconds.
+
+       Note: If you specify 0 the system will perform writes directly to the disk.
+             We recommend this to be 0 if you are using journalType=MAPPED and journal-datasync=false.
+      -->
+      <journal-buffer-timeout>2812000</journal-buffer-timeout>
+
+
+      <!--
+        When using ASYNCIO, this will determine the writing queue depth for libaio.
+       -->
+      <journal-max-io>1</journal-max-io>
+      <!--
+        You can verify the network health of a particular NIC by specifying the <network-check-NIC> element.
+         <network-check-NIC>theNicName</network-check-NIC>
+        -->
+
+      <!--
+        Use this to use an HTTP server to validate the network
+         <network-check-URL-list>http://www.apache.org</network-check-URL-list> -->
+
+      <!-- <network-check-period>10000</network-check-period> -->
+      <!-- <network-check-timeout>1000</network-check-timeout> -->
+
+      <!-- this is a comma separated list, no spaces, just DNS or IPs
+           it should accept IPV6
+
+           Warning: Make sure you understand your network topology as this is meant to validate if your network is valid.
+                    Using IPs that could eventually disappear or be partially visible may defeat the purpose.
+                    You can use a list of multiple IPs, and if any successful ping will make the server OK to continue running -->
+      <!-- <network-check-list>10.0.0.1</network-check-list> -->
+
+      <!-- use this to customize the ping used for ipv4 addresses -->
+      <!-- <network-check-ping-command>ping -c 1 -t %d %s</network-check-ping-command> -->
+
+      <!-- use this to customize the ping used for ipv6 addresses -->
+      <!-- <network-check-ping6-command>ping6 -c 1 %2$s</network-check-ping6-command> -->
+
+
+
+    <connectors>
+        <!-- Connector used to be announced through cluster connections and notifications -->
+        <connector name="artemis">tcp://artemisslave:61616</connector>
+    </connectors>
+
+
+
+      <!-- how often we are looking for how many bytes are being used on the disk in ms -->
+      <disk-scan-period>5000</disk-scan-period>
+
+      <!-- once the disk hits this limit the system will block, or close the connection in certain protocols
+           that won't support flow control. -->
+      <max-disk-usage>90</max-disk-usage>
+
+      <!-- should the broker detect dead locks and other issues -->
+      <critical-analyzer>true</critical-analyzer>
+
+      <critical-analyzer-timeout>120000</critical-analyzer-timeout>
+
+      <critical-analyzer-check-period>60000</critical-analyzer-check-period>
+
+      <critical-analyzer-policy>HALT</critical-analyzer-policy>
+
+      
+      <page-sync-timeout>2812000</page-sync-timeout>
+
+
+      <!-- the system will enter into page mode once you hit this limit. This is an estimate in bytes of how much the messages are using in memory
+
+      The system will use half of the available memory (-Xmx) by default for the global-max-size.
+      You may specify a different value here if you need to customize it to your needs.
+
+      <global-max-size>100Mb</global-max-size> -->
+
+      <!-- the maximum number of messages accepted before entering full address mode.
+           if global-max-size is specified the full address mode will be specified by whatever hits it first. -->
+      <global-max-messages>-1</global-max-messages>
+
+      <acceptors>
+
+         <!-- useEpoll means: it will use Netty epoll if you are on a system (Linux) that supports it -->
+         <!-- amqpCredits: The number of credits sent to AMQP producers -->
+         <!-- amqpLowCredits: The server will send the # credits specified at amqpCredits at this low mark -->
+         <!-- amqpDuplicateDetection: If you are not using duplicate detection, set this to false
+                                      as duplicate detection requires applicationProperties to be parsed on the server. -->
+         <!-- amqpMinLargeMessageSize: Determines how many bytes are considered large, so we start using files to hold their data.
+                                       default: 102400, -1 would mean to disable large message control -->
+
+         <!-- Note: If an acceptor needs to be compatible with HornetQ and/or Artemis 1.x clients add
+                    "anycastPrefix=jms.queue.;multicastPrefix=jms.topic." to the acceptor url.
+                    See https://issues.apache.org/jira/browse/ARTEMIS-1644 for more information. -->
+
+
+         <!-- Acceptor for every supported protocol -->
+         <acceptor name="artemis">tcp://0.0.0.0:61616?tcpSendBufferSize=1048576;tcpReceiveBufferSize=1048576;amqpMinLargeMessageSize=102400;protocols=CORE,AMQP,STOMP,HORNETQ,MQTT,OPENWIRE;useEpoll=true;amqpCredits=1000;amqpLowCredits=300;amqpDuplicateDetection=true;supportAdvisory=false;suppressInternalManagementObjects=false</acceptor>
+
+         <!-- AMQP Acceptor.  Listens on default AMQP port for AMQP traffic.-->
+         <acceptor name="amqp">tcp://0.0.0.0:5672?tcpSendBufferSize=1048576;tcpReceiveBufferSize=1048576;protocols=AMQP;useEpoll=true;amqpCredits=1000;amqpLowCredits=300;amqpMinLargeMessageSize=102400;amqpDuplicateDetection=true</acceptor>
+
+         <!-- STOMP Acceptor. -->
+         <acceptor name="stomp">tcp://0.0.0.0:61613?tcpSendBufferSize=1048576;tcpReceiveBufferSize=1048576;protocols=STOMP;useEpoll=true</acceptor>
+
+         <!-- HornetQ Compatibility Acceptor.  Enables HornetQ Core and STOMP for legacy HornetQ clients. -->
+         <acceptor name="hornetq">tcp://0.0.0.0:5445?anycastPrefix=jms.queue.;multicastPrefix=jms.topic.;protocols=HORNETQ,STOMP;useEpoll=true</acceptor>
+
+         <!-- MQTT Acceptor -->
+         <acceptor name="mqtt">tcp://0.0.0.0:1883?tcpSendBufferSize=1048576;tcpReceiveBufferSize=1048576;protocols=MQTT;useEpoll=true</acceptor>
+
+      </acceptors>
+
+
+      <cluster-user>admin</cluster-user>
+
+      <cluster-password>admin</cluster-password>
+
+      <broadcast-groups>
+         <broadcast-group name="bg-group1">
+            <jgroups-file>jgroups.xml</jgroups-file>
+            <jgroups-channel>activemq_broadcast_channel</jgroups-channel>
+            <connector-ref>artemis</connector-ref>
+         </broadcast-group>
+      </broadcast-groups>
+
+      <discovery-groups>
+         <discovery-group name="dg-group1">
+            <jgroups-file>jgroups.xml</jgroups-file>
+            <jgroups-channel>activemq_broadcast_channel</jgroups-channel>
+            <refresh-timeout>10000</refresh-timeout>
+         </discovery-group>
+      </discovery-groups>
+
+      <cluster-connections>
+         <cluster-connection name="my-cluster">
+            <connector-ref>artemis</connector-ref>
+            <message-load-balancing>ON_DEMAND</message-load-balancing>
+            <max-hops>0</max-hops>
+            <discovery-group-ref discovery-group-name="dg-group1"/>
+         </cluster-connection>
+      </cluster-connections>
+
+
+      <ha-policy>
+         <replication>
+            <backup>
+                <allow-failback>true</allow-failback>
+            </backup>
+         </replication>
+      </ha-policy>
+
+      <security-settings>
+         <security-setting match="#">
+            <permission type="createNonDurableQueue" roles="amq"/>
+            <permission type="deleteNonDurableQueue" roles="amq"/>
+            <permission type="createDurableQueue" roles="amq"/>
+            <permission type="deleteDurableQueue" roles="amq"/>
+            <permission type="createAddress" roles="amq"/>
+            <permission type="deleteAddress" roles="amq"/>
+            <permission type="consume" roles="amq"/>
+            <permission type="browse" roles="amq"/>
+            <permission type="send" roles="amq"/>
+            <!-- we need this otherwise ./artemis data imp wouldn't work -->
+            <permission type="manage" roles="amq"/>
+         </security-setting>
+      </security-settings>
+
+      <address-settings>
+         <!-- if you define auto-create on certain queues, management has to be auto-create -->
+         <address-setting match="activemq.management#">
+            <dead-letter-address>DLQ</dead-letter-address>
+            <expiry-address>ExpiryQueue</expiry-address>
+            <redelivery-delay>0</redelivery-delay>
+            <!-- with -1 only the global-max-size is in use for limiting -->
+            <max-size-bytes>-1</max-size-bytes>
+            <message-counter-history-day-limit>10</message-counter-history-day-limit>
+            <address-full-policy>PAGE</address-full-policy>
+            <auto-create-queues>true</auto-create-queues>
+            <auto-create-addresses>true</auto-create-addresses>
+         </address-setting>
+         <!--default for catch all-->
+         <address-setting match="#">
+            <dead-letter-address>DLQ</dead-letter-address>
+            <expiry-address>ExpiryQueue</expiry-address>
+            <redelivery-delay>0</redelivery-delay>
+
+            <message-counter-history-day-limit>10</message-counter-history-day-limit>
+            <address-full-policy>PAGE</address-full-policy>
+            <auto-create-queues>true</auto-create-queues>
+            <auto-create-addresses>true</auto-create-addresses>
+            <auto-delete-queues>false</auto-delete-queues>
+            <auto-delete-addresses>false</auto-delete-addresses>
+
+            <!-- The size of each page file -->
+            <page-size-bytes>10M</page-size-bytes>
+
+            <!-- When we start applying the address-full-policy, e.g paging -->
+            <!-- Both are disabled by default, which means we will use the global-max-size/global-max-messages  -->
+            <max-size-bytes>-1</max-size-bytes>
+            <max-size-messages>-1</max-size-messages>
+
+            <!-- When we read from paging into queues (memory) -->
+
+            <max-read-page-messages>-1</max-read-page-messages>
+            <max-read-page-bytes>20M</max-read-page-bytes>
+
+            <!-- Limit on paging capacity before starting to throw errors -->
+
+            <page-limit-bytes>-1</page-limit-bytes>
+            <page-limit-messages>-1</page-limit-messages>
+          </address-setting>
+      </address-settings>
+
+      <addresses>
+         <address name="DLQ">
+            <anycast>
+               <queue name="DLQ" />
+            </anycast>
+         </address>
+         <address name="ExpiryQueue">
+            <anycast>
+               <queue name="ExpiryQueue" />
+            </anycast>
+         </address>
+
+      </addresses>
+
+
+      <!-- Uncomment the following if you want to use the Standard LoggingActiveMQServerPlugin pluging to log in events
+      <broker-plugins>
+         <broker-plugin class-name="org.apache.activemq.artemis.core.server.plugin.impl.LoggingActiveMQServerPlugin">
+            <property key="LOG_ALL_EVENTS" value="true"/>
+            <property key="LOG_CONNECTION_EVENTS" value="true"/>
+            <property key="LOG_SESSION_EVENTS" value="true"/>
+            <property key="LOG_CONSUMER_EVENTS" value="true"/>
+            <property key="LOG_DELIVERING_EVENTS" value="true"/>
+            <property key="LOG_SENDING_EVENTS" value="true"/>
+            <property key="LOG_INTERNAL_EVENTS" value="true"/>
+         </broker-plugin>
+      </broker-plugins>
+      -->
+
+    </core>
+    </configuration>
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: artemis-jgroups-tcp-config-primary
+data:
+  jgroups.xml: |
+    <config xmlns="urn:org:jgroups"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="urn:org:jgroups http://www.jgroups.org/schema/jgroups.xsd">
+        <!-- TCP Transport Protocol -->
+        <TCP bind_addr="${jgroups.bind_addr:site_local}"
+           bind_port="${jgroups.bind_port:7800}"
+           external_addr="${jgroups.external_addr}"
+           external_port="${jgroups.external_port}"
+           thread_pool.min_threads="0"
+           thread_pool.max_threads="200"
+           thread_pool.keep_alive_time="30000"/>
+        <RED/>
+        
+        <TCPPING initial_hosts="artemismaster[7800],artemisslave[7800]"
+         port_range="2" />
+        
+        <!-- DNS_PING Protocol for DNS-based service discovery -->
+        <!--dns.DNS_PING dns_query="${jgroups.dns.query:_ping._tcp.artemismaster-0.artemismaster.default.svc.cluster.local}"
+                  dns_record_type="${jgroups.dns.record:SRV}"
+                  dns_address="kube-dns.kube-system:53"
+                  num_discovery_runs="3"
+        /-->        
+        <!-- MERGE3 Protocol for group membership management -->
+        <MERGE3 min_interval="10000"
+                max_interval="30000"
+        />
+        <!-- FD_SOCK Protocol for failure detection -->
+        <FD_SOCK2/>
+        <!-- FD Protocol for failure detection -->
+        <FD_ALL3/>
+        <!-- VERIFY_SUSPECT Protocol for verifying suspected nodes -->
+        <VERIFY_SUSPECT timeout="1000"/>
+        <!-- NAKACK2 Protocol for reliable multicast -->
+        <pbcast.NAKACK2 use_mcast_xmit="false"
+                  xmit_interval="200"
+                  xmit_table_num_rows="50"
+                  xmit_table_msgs_per_row="1024"
+                  xmit_table_max_compaction_time="30000"
+                  resend_last_seqno="true"
+        />
+        <!-- UNICAST3 Protocol for point-to-point messaging -->
+        <UNICAST3 conn_close_timeout="5000"
+                  xmit_interval="200"
+                  xmit_table_num_rows="50"
+                  xmit_table_msgs_per_row="1024"
+                  xmit_table_max_compaction_time="30000"
+        />
+        <!-- STABLE Protocol for state transfer -->
+        <pbcast.STABLE desired_avg_gossip="5000"
+                 max_bytes="1M"
+        />
+        <!-- GMS Protocol for group membership management -->
+        <pbcast.GMS print_local_addr="false"
+             join_timeout="${jgroups.join_timeout:2000}"
+        />
+        <!-- UFC Protocol for unreliable multicast -->
+        <UFC max_credits="${jgroups.max_credits:4m}"
+             min_threshold="0.40"
+        />
+        <!-- MFC Protocol for reliable multicast -->
+        <MFC max_credits="${jgroups.max_credits:4m}"
+             min_threshold="0.40"
+        />
+        <!-- FRAG3 Protocol for message fragmentation -->
+        <FRAG4 frag_size="${jgroups.frag_size:60000}"/>
+    </config>
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: artemis-jgroups-tcp-config-backup
+data:
+  jgroups.xml: |
+    <config xmlns="urn:org:jgroups"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="urn:org:jgroups http://www.jgroups.org/schema/jgroups.xsd">
+        <!-- TCP Transport Protocol -->
+        <TCP bind_addr="${jgroups.bind_addr:site_local}"
+           bind_port="${jgroups.bind_port:7800}"
+           external_addr="${jgroups.external_addr}"
+           external_port="${jgroups.external_port}"
+           thread_pool.min_threads="0"
+           thread_pool.max_threads="200"
+           thread_pool.keep_alive_time="30000"/>
+        <RED/>
+        <TCPPING initial_hosts="artemismaster[7800],artemisslave[7800]"
+         port_range="2" />
+        <!-- DNS_PING Protocol for DNS-based service discovery -->
+        <!--dns.DNS_PING dns_query="${jgroups.dns.query:_ping._tcp.artemismaster-0.artemismaster.default.svc.cluster.local}"
+                  dns_record_type="${jgroups.dns.record:SRV}"
+                  dns_address="kube-dns.kube-system:53"
+                  num_discovery_runs="3"
+        /-->        
+        <!-- MERGE3 Protocol for group membership management -->
+        <MERGE3 min_interval="10000"
+                max_interval="30000"
+        />
+        <!-- FD_SOCK Protocol for failure detection -->
+        <FD_SOCK2/>
+        <!-- FD Protocol for failure detection -->
+        <FD_ALL3/>
+        <!-- VERIFY_SUSPECT Protocol for verifying suspected nodes -->
+        <VERIFY_SUSPECT timeout="1000"/>
+        <!-- NAKACK2 Protocol for reliable multicast -->
+        <pbcast.NAKACK2 use_mcast_xmit="false"
+                  xmit_interval="200"
+                  xmit_table_num_rows="50"
+                  xmit_table_msgs_per_row="1024"
+                  xmit_table_max_compaction_time="30000"
+                  resend_last_seqno="true"
+        />
+        <!-- UNICAST3 Protocol for point-to-point messaging -->
+        <UNICAST3 conn_close_timeout="5000"
+                  xmit_interval="200"
+                  xmit_table_num_rows="50"
+                  xmit_table_msgs_per_row="1024"
+                  xmit_table_max_compaction_time="30000"
+        />
+        <!-- STABLE Protocol for state transfer -->
+        <pbcast.STABLE desired_avg_gossip="5000"
+                 max_bytes="1M"
+        />
+        <!-- GMS Protocol for group membership management -->
+        <pbcast.GMS print_local_addr="false"
+             join_timeout="${jgroups.join_timeout:2000}"
+        />
+        <!-- UFC Protocol for unreliable multicast -->
+        <UFC max_credits="${jgroups.max_credits:4m}"
+             min_threshold="0.40"
+        />
+        <!-- MFC Protocol for reliable multicast -->
+        <MFC max_credits="${jgroups.max_credits:4m}"
+             min_threshold="0.40"
+        />
+        <!-- FRAG3 Protocol for message fragmentation -->
+        <FRAG4 frag_size="${jgroups.frag_size:60000}"/>
+    </config>
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: artemis-profile
+data:
+  artemis.profile: |
+    # Licensed to the Apache Software Foundation (ASF) under one
+    # or more contributor license agreements.  See the NOTICE file
+    # distributed with this work for additional information
+    # regarding copyright ownership.  The ASF licenses this file
+    # to you under the Apache License, Version 2.0 (the
+    # "License"); you may not use this file except in compliance
+    # with the License.  You may obtain a copy of the License at
+    #
+    #   http://www.apache.org/licenses/LICENSE-2.0
+    #
+    # Unless required by applicable law or agreed to in writing,
+    # software distributed under the License is distributed on an
+    # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    # KIND, either express or implied.  See the License for the
+    # specific language governing permissions and limitations
+    # under the License.
+
+    ARTEMIS_HOME='/var/lib/artemis'
+    ARTEMIS_INSTANCE='/var/lib/artemis/artemis-instance'
+    ARTEMIS_DATA_DIR='/var/lib/artemis/artemis-instance/data'
+    ARTEMIS_ETC_DIR='/var/lib/artemis/artemis-instance/etc'
+    ARTEMIS_OOME_DUMP='/var/lib/artemis/artemis-instance/log/oom_dump.hprof'
+
+    # The logging config will need an URI
+    # this will be encoded in case you use spaces or special characters
+    # on your directory structure
+    ARTEMIS_INSTANCE_URI='file:/var/lib/artemis/./artemis-instance/'
+    ARTEMIS_INSTANCE_ETC_URI='file:/var/lib/artemis/./artemis-instance/etc/'
+
+    # Cluster Properties: Used to pass arguments to ActiveMQ Artemis which can be referenced in broker.xml
+    #ARTEMIS_CLUSTER_PROPS="-Dactivemq.remoting.default.port=61617 -Dactivemq.remoting.amqp.port=5673 -Dactivemq.remoting.stomp.port=61614 -Dactivemq.remoting.hornetq.port=5446"
+
+    # Hawtio Properties
+    # HAWTIO_ROLE define the user role or roles required to be able to login to the console. Multiple roles to allow can
+    # be separated by a comma. Set to '*' or an empty value to disable role checking when Hawtio authenticates a user.
+    HAWTIO_ROLE='amq'
+
+    # Java Opts
+    if [ -z "$JAVA_ARGS" ]; then
+        JAVA_ARGS="-XX:AutoBoxCacheMax=20000 -XX:+PrintClassHistogram -XX:+UseG1GC -XX:+UseStringDeduplication -Xms$MEMORYLOW -Xmx$MEMORYHIGH -Dhawtio.disableProxy=true -Dhawtio.realm=activemq -Dhawtio.offline=true -Dhawtio.rolePrincipalClasses=org.apache.activemq.artemis.spi.core.security.jaas.RolePrincipal -Dhawtio.http.strictTransportSecurity=max-age=31536000;includeSubDomains;preload -Djolokia.policyLocation=${ARTEMIS_INSTANCE_ETC_URI}jolokia-access.xml -Dlog4j2.disableJmx=true --add-opens java.base/jdk.internal.misc=ALL-UNNAMED "
+    fi
+
+    # Uncomment to enable logging for Safepoint JVM pauses
+    #
+    # In addition to the traditional GC logs you could enable some JVM flags to know any meaningful and "hidden" pause
+    # that could affect the latencies of the services delivered by the broker, including those that are not reported by
+    # the classic GC logs and dependent by JVM background work (eg method deoptimizations, lock unbiasing, JNI, counted
+    # loops and obviously GC activity).
+    #
+    # Replace "all_pauses.log" with the file name you want to log to.
+    # JAVA_ARGS="$JAVA_ARGS -XX:+PrintSafepointStatistics -XX:PrintSafepointStatisticsCount=1 -XX:+PrintGCApplicationStoppedTime -XX:+PrintGCApplicationConcurrentTime -XX:+LogVMOutput -XX:LogFile=all_pauses.log"
+
+    # Uncomment to enable the dumping of the Java heap when a java.lang.OutOfMemoryError exception is thrown
+    # JAVA_ARGS="$JAVA_ARGS -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=${ARTEMIS_OOME_DUMP}"
+
+    # Only enable debug options for the 'run' command
+    if [ "$1" = "run" ]; then :
+        # Uncomment to enable remote debugging
+        # DEBUG_ARGS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005"
+
+        # Uncomment for async profiler
+        # DEBUG_ARGS="-XX:+UnlockDiagnosticVMOptions -XX:+DebugNonSafepoints"
+    fi
