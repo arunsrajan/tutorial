@@ -1,0 +1,65 @@
+version: '3.8'
+services:
+  artemismaster:
+    image: 'arunsrajan/activemq-artemis:2.37.0'
+    networks:
+      - artemis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8161"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+      start_interval: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 3G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+    ports:
+      - '8161:8161'
+      - '61616:61616'
+    environment:
+      MEMORYLOW: "1G"
+      MEMORYHIGH: "3G"
+    volumes:
+      - ./artemismaster.xml:/var/lib/artemis/artemis-instance/etc/broker.xml
+      - ./jgroups.xml:/var/lib/artemis/artemis-instance/etc/jgroups.xml
+      - ./primary/data:/var/lib/artemis/artemis-instance/data
+      - ./primary/log:/var/lib/artemis/artemis-instance/log
+  artemisslave:
+    image: 'arunsrajan/activemq-artemis:2.37.0'
+    depends_on:
+      artemismaster:
+        condition: service_healthy
+        restart: true
+    networks:
+      - artemis
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 3G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+    ports:
+      - '8162:8161'
+      - '61617:61616'
+    environment:
+      MEMORYLOW: "1G"
+      MEMORYHIGH: "3G"
+    volumes:
+      - ./artemisslave.xml:/var/lib/artemis/artemis-instance/etc/broker.xml
+      - ./jgroups.xml:/var/lib/artemis/artemis-instance/etc/jgroups.xml
+      - ./backup/data:/var/lib/artemis/artemis-instance/data
+      - ./backup/log:/var/lib/artemis/artemis-instance/log
+networks:
+  artemis:
+    name: artemis
+    external: true
