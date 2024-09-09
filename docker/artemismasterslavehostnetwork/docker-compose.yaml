@@ -1,0 +1,59 @@
+version: '3.8'
+services:
+  artemismaster:
+    image: 'arunsrajan/activemq-artemis:2.37.0'
+    hostname: artemismaster
+    network_mode: "host"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://artemismaster:8161"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+      start_interval: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 3G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+    environment:
+      MEMORYLOW: "1G"
+      MEMORYHIGH: "3G"
+    volumes:
+      - ./artemismaster.xml:/var/lib/artemis/artemis-instance/etc/broker.xml
+      - ./jgroupsmaster.xml:/var/lib/artemis/artemis-instance/etc/jgroups.xml
+      - ./bootstrapmaster.xml:/var/lib/artemis/artemis-instance/etc/bootstrap.xml
+      - ./artemis.profile:/var/lib/artemis/artemis-instance/etc/artemis.profile
+      - ./primary/data:/var/lib/artemis/artemis-instance/data
+      - ./primary/log:/var/lib/artemis/artemis-instance/log
+  artemisslave:
+    image: 'arunsrajan/activemq-artemis:2.37.0'
+    hostname: artemisslave
+    depends_on:
+      artemismaster:
+        condition: service_healthy
+        restart: true
+    network_mode: "host"
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 3G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+    environment:
+      MEMORYLOW: "1G"
+      MEMORYHIGH: "3G"
+    volumes:
+      - ./artemisslave.xml:/var/lib/artemis/artemis-instance/etc/broker.xml
+      - ./jgroupsslave.xml:/var/lib/artemis/artemis-instance/etc/jgroups.xml
+      - ./bootstrapslave.xml:/var/lib/artemis/artemis-instance/etc/bootstrap.xml
+      - ./artemis.profile:/var/lib/artemis/artemis-instance/etc/artemis.profile
+      - ./backup/data:/var/lib/artemis/artemis-instance/data
+      - ./backup/log:/var/lib/artemis/artemis-instance/log
