@@ -1,0 +1,22 @@
+connect --username=admin --password=fgwfGrHyjSJ infinispan2:11223
+user create bob -p admin
+user groups bob --groups=readonly
+user roles grant --roles=readonly readonly
+user create tom -p admin
+user groups tom --groups=readwrite
+user roles grant --roles=readwrite readwrite
+user create sam -p admin
+user groups sam --groups=writeonly
+user roles grant --roles=writeonly writeonly
+disconnect
+connect --username=admin --password=fgwfGrHyjSJ infinispan1:11222
+user create bob -p admin
+user groups bob --groups=readonly
+user roles grant --roles=readonly readonly
+user create tom -p admin
+user groups tom --groups=readwrite
+user roles grant --roles=readwrite readwrite
+user create sam -p admin
+user groups sam --groups=writeonly
+user roles grant --roles=writeonly writeonly
+disconnect

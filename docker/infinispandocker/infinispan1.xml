@@ -1,0 +1,66 @@
+<infinispan
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="urn:infinispan:config:15.0 https://infinispan.org/schemas/infinispan-config-15.1.xsd
+                            urn:infinispan:server:15.0 https://infinispan.org/schemas/infinispan-server-15.1.xsd"
+      xmlns="urn:infinispan:config:15.1"
+      xmlns:server="urn:infinispan:server:15.1">
+	  
+   <cache-container name="default" statistics="true">
+      <transport cluster="${infinispan.cluster.name:cluster}" stack="${infinispan.cluster.stack:tcp}" node-name="${infinispan.node.name:}"/>
+      <security>
+         <authorization>			
+                <role name="readonly" permissions="READ"/>
+				<role name="writeonly" permissions="WRITE"/>
+				<role name="readwrite" permissions="READ WRITE"/>
+		 </authorization>
+      </security>
+	  <distributed-cache name="productCache">
+	  <encoding>
+		  <key media-type="application/x-protostream"/>
+		  <value media-type="application/x-protostream"/>
+	  </encoding>
+	  <persistence passivation="true">
+		<file-store>
+			<data path="data"/>
+			<index path="index"/>
+		</file-store>
+		</persistence>
+      <security>
+        <authorization enabled="true" roles="readonly" />
+		<authorization enabled="true" roles="writeonly" />
+		<authorization enabled="true" roles="readwrite" />
+		<authorization enabled="true" roles="admin" />
+	  </security>
+    </distributed-cache>
+   </cache-container>
+
+   <server xmlns="urn:infinispan:server:15.1">
+      <interfaces>
+         <interface name="public">
+            <match-host value="infinispan1"/>
+         </interface>
+      </interfaces>
+
+      <socket-bindings default-interface="public" port-offset="${infinispan.socket.binding.port-offset:0}">
+         <socket-binding name="default" port="${infinispan.bind.port:11222}"/>
+      </socket-bindings>
+
+      <security>
+         <security-realms>
+            <security-realm name="default">
+               <!-- Uncomment to enable TLS on the realm -->
+               <!-- server-identities>
+                  <ssl>
+                     <keystore path="server.pfx"
+                               password="password" alias="server"
+                               generate-self-signed-certificate-host="localhost"/>
+                  </ssl>
+               </server-identities-->
+               <properties-realm/>
+            </security-realm>
+         </security-realms>
+      </security>
+
+      <endpoints socket-binding="default" security-realm="default" />
+   </server>
+</infinispan>
