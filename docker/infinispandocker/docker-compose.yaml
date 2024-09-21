@@ -1,11 +1,9 @@
-version: "3.8"
 services:
   infinispan-1:
     image: 'infinispan/server:15.1'
     hostname: infinispan1
     user: 0:0
-    networks:
-      - infinispan
+    network_mode: "host"
     restart: unless-stopped
     deploy:
       resources:
@@ -18,22 +16,23 @@ services:
     ports:
       - "11222:11222"
     environment:
-      CONTAINER_MAX_MEMORY: "10G"
-      USER: "admin"
-      PASS: "fgwfGrHyjSJ"
       SERVER_LIBS: "org.rocksdb:rocksdbjni:9.0.1"
+      IDENTITIES_BATCH: "/opt/infinispan/user-config/identities.batch"
+      MEMORYMIN: "5G"
+      MEMORYMAX: "5G"
     volumes:      
       - ./server1/data:/opt/infinispan/server/data
       - ./server1/log:/opt/infinispan/server/log
       - ./infinispan1.xml:/opt/infinispan/server/conf/infinispan.xml
       - ./infinispan1/users.properties:/opt/infinispan/server/conf/users.properties
       - ./infinispan1/groups.properties:/opt/infinispan/server/conf/groups.properties
+      - ./identities.batch:/opt/infinispan/user-config/identities.batch
+      - ./server.conf:/opt/infinispan/bin/server.conf
   infinispan-2:
     image: 'infinispan/server:15.1'
     hostname: infinispan2
     user: 0:0
-    networks:
-      - infinispan
+    network_mode: "host"
     restart: unless-stopped
     deploy:
       resources:
@@ -46,16 +45,18 @@ services:
     ports:
       - "11223:11223"
     environment:
-      CONTAINER_MAX_MEMORY: "5G"
-      USER: "admin"
-      PASS: "fgwfGrHyjSJ"
       SERVER_LIBS: "org.rocksdb:rocksdbjni:9.0.1"
+      IDENTITIES_BATCH: "/opt/infinispan/user-config/identities.batch"
+      MEMORYMIN: "5G"
+      MEMORYMAX: "5G"
     volumes:      
       - ./server2/data:/opt/infinispan/server/data
       - ./server2/log:/opt/infinispan/server/log
       - ./infinispan2.xml:/opt/infinispan/server/conf/infinispan.xml
       - ./infinispan2/users.properties:/opt/infinispan/server/conf/users.properties
       - ./infinispan2/groups.properties:/opt/infinispan/server/conf/groups.properties
+      - ./identities.batch:/opt/infinispan/user-config/identities.batch
+      - ./server.conf:/opt/infinispan/bin/server.conf
 networks:
   infinispan:
     name: infinispan
