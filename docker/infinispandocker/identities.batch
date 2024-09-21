@@ -1,0 +1,5 @@
+user create "admin" -p "Vh3J8FuH7" -g admin
+user create "observer" -p "YsfsUrH7W" -g observer
+user create "monitor" -p "YMe5V5hR2N" -g monitor
+user create "deployer" -p "N3F76EnV8G6" -g deployer
+user create "application" -p "Rm36G8R6geJ7" -g application
