@@ -1,0 +1,12 @@
+Install Kafka connect and migrate messages from activemq using Strimzi operator Step By Step 
+1. Create a kubernetes Cluster using minikube or kind or use the existing k8s cluster.
+2. create namespace kafka.
+3. Install Strimzi operator using kubectl create command.
+4. Create kafka 3 node cluster using nodepools crs and kafka crs.
+5. create kafka topic with topic name as kafka2.
+6. Build kafka connect docker image with jms and activemq plugins downloaded from confluent.
+7. Create Kafka connect pod using the docker image built from the previous step i.e step 6.
+8. Install activemq artemis server in dashboard.
+9. Create activemq source connector to connect the kafka connect pod which creates queue 
+in artemis and get messages from queue.
+10. Create  file sink connector to write messages in file within kafka connect pod.
