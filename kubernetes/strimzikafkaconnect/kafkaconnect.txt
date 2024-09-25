@@ -1,4 +1,4 @@
-minikube start -p strimzi --cpus 11 --memory 12g --mount=true --mount-string=C:\DEVELOPMENT\kafkastrimzi:/strimzi --driver docker
+minikube start -p strimzikafka --cpus 11 --memory 12g --mount=true --mount-string=C:\DEVELOPMENT\kafkastrimzi\strimzikafkaconnect:/strimzi --driver docker
 
 
 steps for deploying the strimzi operator
@@ -60,20 +60,25 @@ spec:
     userOperator: {}
 
 
+To create kafka topic with topic name as kafka2
+------------------------------------------------
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: kafka-cluster-2-kafka2
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: kafka-cluster-2
+spec:
+  topicName: kafka2
+
+
 Building Kafka Connect With Plugins
 ------------------------------------------------------------------------------------------------------------------------
-Dockerfile
-----------
-FROM quay.io/strimzi/kafka:0.43.0-kafka-3.7.0
-USER root
-# Add additional plugins or configurations here
-COPY connectors/*.jar /usr/share/java
-COPY connectors/*.jar /opt/kafka/plugins
-
 To Build KafkaConnect with Plugins
 ----------------------------------
-docker build -t arunsrajan/strimzi-kafka-connect:3.7-latest .
-docker push arunsrajan/strimzi-kafka-connect:3.7-latest
+docker build -t arunsrajan/strimzi-kafka-connect-activemq:3.7-latest .
+docker push arunsrajan/strimzi-kafka-connect-activemq:3.7-latest
 
 
 
@@ -82,7 +87,7 @@ To Start Kafka Connect with Connectors
 apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaConnect
 metadata:
-  name: my-connect
+  name: kafka-connect
   namespace: kafka
   annotations:
     strimzi.io/use-connector-resources: "true"
@@ -90,7 +95,7 @@ spec:
   bootstrapServers: kafka-cluster-2-kafka-bootstrap.kafka:9092
   version: 3.7.0
   replicas: 1
-  image: arunsrajan/strimzi-kafka-connect:3.7-latest
+  image: arunsrajan/strimzi-kafka-connect-activemq:3.7-latest
   # build:
     # output:
        # type: docker
@@ -124,7 +129,7 @@ metadata:
   name: file-source
   namespace: kafka
   labels:
-    strimzi.io/cluster: my-connect
+    strimzi.io/cluster: kafka-connect
 spec:
   class: org.apache.kafka.connect.file.FileStreamSourceConnector
   tasksMax: 1
@@ -138,12 +143,38 @@ metadata:
   name: file-sink
   namespace: kafka
   labels:
-    strimzi.io/cluster: my-connect
+    strimzi.io/cluster: kafka-connect
 spec:
   class: org.apache.kafka.connect.file.FileStreamSinkConnector
   tasksMax: 1
   config:
     file: /tmp/output.txt
     topics: kafka2
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaConnector
+metadata:
+  name: activemq-source
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: kafka-connect
+spec:
+  class: io.confluent.connect.activemq.ActiveMQSourceConnector
+  tasksMax: 1
+  config:
+    connector.class: io.confluent.connect.activemq.ActiveMQSourceConnector
+    activemq.url: tcp://artemis:61616
+    activemq.username: admin
+    activemq.password: admin
+    kafka.topic: kafka2
+    jms.destination.name: kafkatest
+    jms.destination.type: queue
+    confluent.license: ""
+    confluent.topic.bootstrap.servers: kafka-cluster-2-kafka-bootstrap.kafka:9092
+
+----------------------------------------------------------------------------------------
+
+kubectl port-forward --address 0.0.0.0 svc/artemis -n kafka 8161:8161
 
 
+https://www.confluent.io/hub/confluentinc/kafka-connect-activemq
