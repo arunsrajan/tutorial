@@ -1,0 +1,33 @@
+minikube start -p kafka --cpus 12 --memory 10g --mount=true --mount-string=C:\DEVELOPMENT\bitnamikafka:/bitnamikakfa
+
+Kafka-broker-single-wildcard
+----------------------------
+keytool -genkeypair -keyalg RSA -alias kafka -keystore kafka.keystore.jks -validity 365 -storepass admin12345$ -keypass admin12345$ -dname "CN=kafka-controller-*.kafka-controller-headless.default.svc.cluster.local, O=CLH, L=CHENNAI, ST=TN, C=IN" -validity 365
+keytool -exportcert -alias kafka -keystore kafka.keystore.jks -file kafka.cert -storepass admin12345$
+keytool -importcert -alias kafka -file kafka.cert -keystore kafka.truststore.jks -storepass admin12345$
+
+kubectl create secret generic kafka-jks --from-file=kafka.truststore.jks=./kafka.truststore.jks --from-file=kafka.keystore.jks=./kafka.keystore.jks
+kubectl create secret generic kafka-secret-passwords --from-literal=keystore-password=admin12345$ --from-literal=truststore-password=admin12345$
+
+helm install kafka oci://registry-1.docker.io/bitnamicharts/kafka --set zookeeper.enabled=false,zookeeper.replicaCount=0,kraft.enabled=true,controller.replicaCount=3,controller.controllerOnly=false,broker.replicaCount=0,persistence.size=2Gi,logPersistence.size=2Gi,replicaCount=3,volumePermissions.enabled=true,persistence.enabled=true,logPersistence.enabled=true,replicaCount=3,listeners.client.client.protocol=tls,listeners.client.interbroker.protocol=tls,listeners.controller.protocol=PLAINTEXT,listeners.client.name=PLAINTEXT,listeners.client.containerPort=9092,listeners.client.protocol=PLAINTEXT,listeners.interbroker.name=INTERNAL,listeners.interbroker.containerPort=9094,listeners.interbroker.protocol=SSL,image.tag=3.9.0,broker.initContainerResources.limits.cpu=2,broker.initContainerResources.limits.memory=4Gi,broker.initContainerResources.requests.cpu=4,broker.initContainerResources.requests.memory=4Gi,listeners.external.containerPort=9195,service.ports.external=9195,externalAccess.broker.service.ports.external=9195,externalAccess.controller.service.ports.external=9195,listeners.external.name=EXTERNAL,listeners.external.protocol=SSL,externalAccess.enabled=true,externalAccess.controller.service.loadBalancerNames[0]="lb1",externalAccess.controller.service.loadBalancerNames[1]="lb2",externalAccess.controller.service.loadBalancerNames[2]="lb3",externalAccess.autoDiscovery.enabled=false,controller.automountServiceAccountToken=true,broker.automountServiceAccountToken=true,tls.endpointIdentificationAlgorithm="",tls.sslClientAuth=none,tls.type=JKS,tls.existingSecret=kafka-jks,tls.jksTruststoreSecret=kafka-jks,tls.passwordsSecret=kafka-secret-passwords
+kubectl cp client.properties kafka-controller-0:/tmp
+
+To Start LoadBalancer
+---------------------
+minikube tunnel -p kafka
+
+To connect add the following in windows as well as in linux hosts file
+----------------------------------------------------------------------
+127.0.0.1 lb1 lb2 lb3
+
+Linux
+./kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test2
+./kafka-console-consumer.sh --bootstrap-server localhost:9195 --topic test2 --consumer.config /tmp/client.properties --from-beginning
+./kafka-console-producer.sh --bootstrap-server localhost:9195 --topic test2 --producer.config /tmp/client.properties
+
+Windows
+-------
+bin\windows\kafka-console-consumer --bootstrap-server localhost:9195 --topic test2 --consumer.config client.properties --from-beginning
+
+./kafka-console-consumer.sh --bootstrap-server localhost:9195 --topic test2 --consumer.config /tmp/client.properties --from-beginning
+./kafka-console-producer.sh --bootstrap-server localhost:9195 --topic test2 --producer.config /tmp/client.properties
