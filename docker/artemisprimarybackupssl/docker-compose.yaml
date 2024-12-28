@@ -1,0 +1,74 @@
+services:
+  primarybroker:
+    image: 'arunsrajan/activemq-artemis:2.37.0'
+    hostname: primarybroker
+    networks:
+      - artemis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://primarybroker:8161/console"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+      start_interval: 5s
+    ports:
+      - "61616:61616"
+      - "8161:8161"
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 4G
+        reservations:
+          cpus: '4'
+          memory: 4G
+    environment:
+      MEMORYLOW: "4G"
+      MEMORYHIGH: "4G"
+    volumes:
+      - ./primarybroker.xml:/var/lib/artemis/artemis-instance/etc/broker.xml
+      - ./jgroupsprimarybroker.xml:/var/lib/artemis/artemis-instance/etc/jgroups.xml
+      - ./bootstrapprimarybroker.xml:/var/lib/artemis/artemis-instance/etc/bootstrap.xml
+      - ./artemis.profile:/var/lib/artemis/artemis-instance/etc/artemis.profile
+      - ./artemis.keystore.primary.jks:/var/lib/artemis/artemis-instance/etc/artemis.keystore.primary.jks
+      - ./artemis.truststore.jks:/var/lib/artemis/artemis-instance/etc/artemis.truststore.jks
+      - ./primary/data:/var/lib/artemis/artemis-instance/data
+      - ./primary/log:/var/lib/artemis/artemis-instance/log
+  backupbroker:
+    image: 'arunsrajan/activemq-artemis:2.37.0'
+    hostname: backupbroker
+    depends_on:
+      primarybroker:
+        condition: service_started
+        restart: true
+    networks:
+      - artemis
+    restart: unless-stopped
+    ports:
+      - "61617:61617"
+      - "8162:8162"
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 4G
+        reservations:
+          cpus: '4'
+          memory: 4G
+    environment:
+      MEMORYLOW: "4G"
+      MEMORYHIGH: "4G"
+    volumes:
+      - ./backupbroker.xml:/var/lib/artemis/artemis-instance/etc/broker.xml
+      - ./jgroupsbackupbroker.xml:/var/lib/artemis/artemis-instance/etc/jgroups.xml
+      - ./bootstrapbackupbroker.xml:/var/lib/artemis/artemis-instance/etc/bootstrap.xml
+      - ./artemis.keystore.backup.jks:/var/lib/artemis/artemis-instance/etc/artemis.keystore.backup.jks
+      - ./artemis.truststore.jks:/var/lib/artemis/artemis-instance/etc/artemis.truststore.jks
+      - ./artemis.profile:/var/lib/artemis/artemis-instance/etc/artemis.profile
+      - ./backup/data:/var/lib/artemis/artemis-instance/data
+      - ./backup/log:/var/lib/artemis/artemis-instance/log
+networks:
+  artemis:
+    name: artemis
+    external: true
