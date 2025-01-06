@@ -1,0 +1,66 @@
+<config xmlns="urn:org:jgroups"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="urn:org:jgroups http://www.jgroups.org/schema/jgroups.xsd">
+        <!-- TCP Transport Protocol -->
+        <TCP bind_addr="${jgroups.bind_addr:primarybroker}"
+           bind_port="${jgroups.bind_port:7800}"
+           external_addr="${jgroups.external_addr}"
+           external_port="${jgroups.external_port}"
+           thread_pool.min_threads="0"
+           thread_pool.max_threads="200"
+           thread_pool.keep_alive_time="30000"/>
+        <RED/>
+        
+        <TCPPING initial_hosts="primarybroker[7800],backupbroker[7801]"
+         port_range="2" />
+        
+        <!-- DNS_PING Protocol for DNS-based service discovery -->
+        <!--dns.DNS_PING dns_query="${jgroups.dns.query:_ping._tcp.artemismaster-0.artemismaster.default.svc.cluster.local}"
+                  dns_record_type="${jgroups.dns.record:SRV}"
+                  dns_address="kube-dns.kube-system:53"
+                  num_discovery_runs="3"
+        /-->        
+        <!-- MERGE3 Protocol for group membership management -->
+        <MERGE3 min_interval="10000"
+                max_interval="30000"
+        />
+        <!-- FD_SOCK Protocol for failure detection -->
+        <FD_SOCK2/>
+        <!-- FD Protocol for failure detection -->
+        <FD_ALL3/>
+        <!-- VERIFY_SUSPECT Protocol for verifying suspected nodes -->
+        <VERIFY_SUSPECT timeout="1000"/>
+        <!-- NAKACK2 Protocol for reliable multicast -->
+        <pbcast.NAKACK2 use_mcast_xmit="false"
+                  xmit_interval="200"
+                  xmit_table_num_rows="50"
+                  xmit_table_msgs_per_row="1024"
+                  xmit_table_max_compaction_time="30000"
+                  resend_last_seqno="true"
+        />
+        <!-- UNICAST3 Protocol for point-to-point messaging -->
+        <UNICAST3 conn_close_timeout="5000"
+                  xmit_interval="200"
+                  xmit_table_num_rows="50"
+                  xmit_table_msgs_per_row="1024"
+                  xmit_table_max_compaction_time="30000"
+        />
+        <!-- STABLE Protocol for state transfer -->
+        <pbcast.STABLE desired_avg_gossip="5000"
+                 max_bytes="1M"
+        />
+        <!-- GMS Protocol for group membership management -->
+        <pbcast.GMS print_local_addr="false"
+             join_timeout="${jgroups.join_timeout:2000}"
+        />
+        <!-- UFC Protocol for unreliable multicast -->
+        <UFC max_credits="${jgroups.max_credits:4m}"
+             min_threshold="0.40"
+        />
+        <!-- MFC Protocol for reliable multicast -->
+        <MFC max_credits="${jgroups.max_credits:4m}"
+             min_threshold="0.40"
+        />
+        <!-- FRAG3 Protocol for message fragmentation -->
+        <FRAG4 frag_size="${jgroups.frag_size:60000}"/>
+    </config>
