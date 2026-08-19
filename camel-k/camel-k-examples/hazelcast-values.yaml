@@ -1,0 +1,14 @@
+hazelcast:
+  yaml:
+    hazelcast:
+      network:
+        join:
+          kubernetes:
+            enabled: true
+            service-name: hazelcast-camel
+            namespace: camel-k
+            service-dns: "${serviceName}.${namespace}.svc.cluster.local"
+        rest-api:
+          enabled: true
+      jet:
+        enabled: true

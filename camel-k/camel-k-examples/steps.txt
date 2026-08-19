@@ -1,0 +1,47 @@
+minikube start --cpus 4 --memory 4g --nodes 3 --mount=true --mount-string="C:/DEVELOPMENT/Kubernetes:/mnt/hostpath" --driver podman -p camel-k-podman --container-runtime=docker
+minikube start --cpus 3 --memory 4g --nodes 3 --mount=true --mount-string="C:/DEVELOPMENT/Kubernetes:/mnt/hostpath" --driver docker --insecure-registry="kubernetes.docker.internal:5000"
+minikube dashboard --url -p camel-k-podman
+kubectl create namespace camel-k
+helm repo add camel-k https://apache.github.io/camel-k/charts/
+helm repo update
+helm uninstall camel-k -n camel-k
+kubectl create configmap maven-settings --from-file=settings.xml=maven-settings.xml -n camel-k
+helm install camel-k camel-k/camel-k -n camel-k --version=2.10.1 --set platform.build.registry.address=10.100.55.233:5000 --set platform.build.registry.insecure=true --set platform.build.maven.settings.configMapKeyRef.name=maven-settings --set platform.build.maven.settings.configMapKeyRef.key=settings.xml --set operator.securityContext.privileged=true
+kubectl delete crd $(kubectl get crd | grep 'camel.apache.org' | awk '{print $1}')
+kubectl apply -f camel-integration-platform.yaml
+kubectl apply -f camel-pv.yaml
+kubectl apply -f camel-pvc.yaml
+kubectl apply -f camel-sftp-pv.yaml
+kubectl apply -f camel-sftp-pvc.yaml
+kubectl apply -f camel-sftp.yaml
+kubectl create secret generic sftp-credentials -n camel-k --from-literal=sftp.host="sftp-service.camel-k" --from-literal=sftp.port="22" --from-literal=sftp.username="foo" --from-literal=sftp.password="123" --from-literal=sftp.directory.upload="upload" --from-literal=sftp.directory.download="download"
+kubectl port-forward -n camel-k service/registry 5000:5000 --address 0.0.0.0
+kamel run FileRoute.java --volume camel-k-claim:/mnt/hostpath --dev --namespace camel-k --name test-file-route
+kamel run SftpRoute.java --dev -n camel-k --config secret:sftp-credentials --property "quarkus.log.level=INFO" --name test-sftp-route
+
+
+
+
+helm repo add hazelcast https://hazelcast-charts.s3.amazonaws.com/
+helm repo update
+helm install hazelcast-camel hazelcast/hazelcast -n camel-k --set image.tag=5.4.0-slim --set serviceAccount.name=hazelcast --set cluster.memberCount=1 --set livenessProbe.enabled=false --set readinessProbe.enabled=false --set mancenter.enabled=false --set hazelcast-enabled=true --values hazelcast-values.yaml
+kamel run SftpIdempotentRoute.java --dev -n camel-k --config secret:sftp-credentials --property "quarkus.log.level=INFO" --name test-sftp-idempotent-route
+kubectl scale it test-sftp-idempotent-route --replicas 2 -n camel-k
+helm repo add strimzi https://strimzi.io/charts/
+helm repo update
+helm install strimzi-kafka-operator strimzi/strimzi-kafka-operator --version=0.45.0 -n camel-k --create-namespace
+kubectl apply -f kafka-cluster.yaml
+kubectl apply -f kafka-topic.yaml
+kubectl create configmap pzmap-config --from-file=customers.pzmap.xml=sftp-file-route/customers.pzmap.xml -n camel-k
+kamel run SftpIdempotentKafkaRoute.java --dev -n camel-k --config secret:sftp-credentials --config configmap:pzmap-config --property "quarkus.log.level=INFO" --name test-sftp-idempotent-kafka-route-1 -t camel.version=4.8.5 -t quarkus.version=3.15.3 -t container.security-context-run-as-user=1001 -t container.security-context-run-as-non-root=true
+kubectl scale it test-sftp-idempotent-kafka-route --replicas 2 -n camel-k
+kubectl run kafka-consumer -ti --image=quay.io/strimzi/kafka:latest-kafka-3.8.0 --rm=true --restart=Never --namespace=kafka -- bin/kafka-console-consumer.sh --bootstrap-server my-cluster-kafka-brokers.camel-k:9092 --topic customers-xml-topic --from-beginning
+bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic customers-xml-topic --from-beginning
+
+
+kubectl apply -f camel-pv1.yaml
+kubectl apply -f camel-pvc1.yaml
+kubectl apply -f zookeeper-deployment.yaml
+kamel run ZookeeperFileRoute.java --volume camel-k-claim:/mnt/hostpath --dev -n camel-k --name zookeeper-file-route-1
+kamel run ZookeeperFileRoute.java --volume camel-k-claim-1:/mnt/hostpath --dev -n camel-k --name zookeeper-file-route-2
+kubectl scale it zookeeper-file-route --replicas 2 -n camel-k

@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sftp-service
+  namespace: camel-k
+  labels:
+    k8s-app: sftp
+spec:
+  type: ClusterIP
+  selector:
+    k8s-app: sftp
+  ports:
+    - name: sftp
+      protocol: TCP
+      port: 22
+      targetPort: 22
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sftp
+  namespace: camel-k
+  labels:
+    k8s-app: sftp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: sftp
+  template:
+    metadata:
+      name: sftp
+      labels:
+        k8s-app: sftp
+    spec:
+      containers:
+        - name: sftp
+          image: docker.io/atmoz/sftp:latest
+          securityContext:
+            capabilities:
+                add: ["SYS_ADMIN"]
+            privileged: true
+          ports:
+            - containerPort: 22
+              name: sftpport
+          volumeMounts:
+            - name: storage-volume
+              mountPath: /etc/sftp  # Path inside the container
+            - name: storage-volume-up-down
+              mountPath: /home/foo  # Path inside the container  
+      volumes:
+        - name: storage-volume
+          persistentVolumeClaim:
+            claimName: sftp-shared  # Must match the PVC metadata.name
+        - name: storage-volume-up-down
+          persistentVolumeClaim:
+            claimName: sftp-shared-up-down  # Must match the PVC metadata.name

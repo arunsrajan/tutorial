@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: camel-k-operator-deployment
+  namespace: camel-k
+  labels:
+    app: camel-k-operator-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: camel-k-operator-app
+  template:
+    metadata:
+      labels:
+        app: camel-k-operator-app
+    spec:
+      # 1. POD-LEVEL SECURITY CONTEXT
+      # Applies to all containers within the pod unless overridden
+      securityContext:
+        runAsNonRoot: true        # Enforces that the container must run as a non-root user
+        runAsUser: 1000           # Executes all processes with User ID 1000
+        runAsGroup: 3000          # Executes all processes with Group ID 3000
+        fsGroup: 2000             # Changes ownership of mounted volumes to Group ID 2000
+        seccompProfile:
+          type: RuntimeDefault    # Restricts available system calls using the runtime default profile
+
+      containers:
+        - name: camel-k-operator-container
+          image: testcamelk/camel-k:2.11.0-nightly-21-jdk     # Ensure your image supports running as non-root (UID 1000)
+          env:
+            - name: JAVA_TOOL_OPTIONS
+              value: "-Djava.util.prefs.userRoot=/tmp/.java -Djava.util.prefs.systemRoot=/tmp/.java/.systemPrefs"
+          ports:
+            - containerPort: 8080 # Use ports > 1024 since non-root users cannot bind to privileged ports
+          
+          # 2. CONTAINER-LEVEL SECURITY CONTEXT
+          # Fine-grained controls specific to this individual container
+          securityContext:
+            allowPrivilegeEscalation: false # Prevents processes from gaining more privileges than parent
+            readOnlyRootFilesystem: true   # Mounts the container filesystem as read-only to prevent malware persistence
+            privileged: false              # Disables full host access
+            capabilities:
+              drop:
+                - ALL                      # Drops all default Linux kernel privileges
+
+          resources:
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+            requests:
+              cpu: "250m"
+              memory: "128Mi"
+          
+          volumeMounts:
+            - name: cache-volume
+              mountPath: /tmp              # Provide a writeable memory volume since the root FS is read-only
+
+      volumes:
+        - name: cache-volume
+          emptyDir: {}

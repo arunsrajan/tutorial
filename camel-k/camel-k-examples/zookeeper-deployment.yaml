@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zookeeper
+  namespace: camel-k
+  labels:
+    k8s-app: zookeeper
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: zookeeper
+  template:
+    metadata:
+      name: zookeeper
+      labels:
+        k8s-app: zookeeper
+    spec:
+      containers:
+        - name: zookeeper
+          image: zookeeper:3.9.2
+          env:
+            - name: ZOOKEEPER_SASL_ENABLED
+              value: "false"
+            - name: ZOO_MAX_CLIENT_CNXNS
+              value: "60"
+            - name: ZOO_ADMINSERVER_ENABLED
+              value: "false"
+            - name: ZOO_TICK_TIME
+              value: "500"
+          securityContext:
+            privileged: false
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zookeeper
+  namespace: camel-k
+  labels:
+    k8s-app: zookeeper
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - port: 2181
+      targetPort: 2181
+      name: protocol-port
+  selector:
+    k8s-app: zookeeper

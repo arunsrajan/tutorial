@@ -1,0 +1,36 @@
+apiVersion: camel.apache.org/v1
+kind: IntegrationPlatform
+metadata:
+  labels:
+    app: camel-k
+  name: camel-k
+  namespace: camel-k
+spec:
+  build:    
+    registry:
+      address: 10.100.55.233:5000
+      organization: camel-k
+      insecure: true   
+    runtimeVersion: 3.15.3
+    maven:
+      cliOptions:
+        - "-Dmaven.wagon.http.ssl.insecure=true"
+        - "-Dmaven.wagon.http.ssl.allowall=true"
+        - "-Dmaven.wagon.http.ssl.ignore.validity.dates=true"
+      # 1. Custom Settings & Security references
+      settings:
+        configMapKeyRef:
+          name: maven-settings
+          key: settings.xml
+      # 2. Local Repository Path override (used for local operator/testing setups)
+      localRepository: /etc/maven/m2
+  # 4. Global runtime behavior settings
+  profile: Kubernetes # Can be OpenShift or Knative
+  traits:
+    logging:
+      configuration:
+        level: INFO # Sets default log visibility globally
+    container:
+      configuration:
+        limitCpu: "1"
+        limitMemory: "1Gi"

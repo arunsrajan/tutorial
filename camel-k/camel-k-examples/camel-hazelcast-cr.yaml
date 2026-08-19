@@ -1,0 +1,42 @@
+apiVersion: hazelcast.com/v1alpha1
+kind: HazelcastEndpoint
+metadata:
+  name: hazelcastendpoint-sample
+  namespace: camel-k
+spec:
+  hazelcastResourceName: hazelcast
+  port: 5701
+  type: Member
+---
+apiVersion: hazelcast.com/v1alpha1
+kind: HazelcastEndpoint
+metadata:
+  name: hazelcastendpoint-sample1
+  namespace: camel-k
+spec:
+  hazelcastResourceName: hazelcast
+  port: 5702
+  type: Member
+---
+apiVersion: hazelcast.com/v1alpha1
+kind: HazelcastEndpoint
+metadata:
+  name: hazelcastendpoint-health
+  namespace: camel-k
+spec:
+  hazelcastResourceName: hazelcast
+  port: 8081
+  type: WAN
+---
+apiVersion: hazelcast.com/v1alpha1
+kind: Hazelcast
+metadata:
+  name: hazelcast-camel
+  namespace: camel-k
+spec:
+  clusterSize: 1
+  clusterName: dev
+  repository: 'docker.io/hazelcast/hazelcast'
+  version: '5.4.0-slim'
+  highAvailabilityMode: NODE
+  serviceAccountName: hazelcast

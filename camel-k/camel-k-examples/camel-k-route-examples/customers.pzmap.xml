@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE file-format SYSTEM "flatpack.dtd">
+<file-format>    
+        <COLUMN name="CUSTOMER_ID" />
+        <COLUMN name="FIRST_NAME" />
+        <COLUMN name="LAST_NAME" />
+        <COLUMN name="EMAIL" />
+        <COLUMN name="PHONE" />
+        <COLUMN name="STREET" />
+        <COLUMN name="CITY" />
+        <COLUMN name="STATE" />
+        <COLUMN name="ZIP_CODE" />
+        <COLUMN name="COUNTRY" />
+</file-format>
